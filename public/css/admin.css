@@ -1,0 +1,666 @@
+:root{
+    --primary-color: #4B9CD3 !important; /* Bleu clair */
+    --secondary-color: #1F3A93 !important; /* Bleu foncé */
+    --bg-color: #F2F2F2 !important; /* Gris clair */
+    --gradient-color: linear-gradient(90deg, rgba(31,58,147,1) 0%, rgba(75,156,211,1) 100%) !important; /* Dégradé de bleu */
+}
+
+body{
+    background-color: var(--bg-color) !important;
+}
+
+@font-face {
+    font-family: "Montserrat-Bold";
+    src: url("../fonts/Montserrat-Bold.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Montserrat-ExtraBold";
+    src: url("../fonts/Montserrat-ExtraBold.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Montserrat-Light";
+    src: url("../fonts/Montserrat-Light.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Montserrat-Regular";
+    src: url("../fonts/Montserrat-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Montserrat-Medium";
+    src: url("../fonts/Montserrat-Medium.otf") format("opentype");
+    font-display: swap;
+}
+
+.font-bold{
+    font-family: "Montserrat-Bold";
+}
+
+.font-light{
+    font-family: "Montserrat-Light";
+}
+
+.font-regular{
+    font-family: "Montserrat-Regular";
+}
+
+.font-medium{
+    font-family: "Montserrat-Medium";
+}
+
+body{
+    font-family: "Montserrat-Regular", sans-serif;
+    font-size: 16px;
+}
+
+/* Taille de police avec .fs-breakpoint */
+
+.fs-12{
+    font-size: 12px;
+}
+.fs-14{
+    font-size: 14px;
+}
+.fs-16{
+    font-size: 16px;
+}
+.fs-18{
+    font-size: 18px;
+}
+.fs-22{
+    font-size: 22px;
+}
+.fs-24{
+    font-size: 24px;
+}
+
+/* Couleurs du texte  */
+
+.text-primary-color{
+    color: var(--secondary-color) !important;
+}
+
+.text-black{
+    color: #000 !important;
+}
+
+.text-gradient{
+    background: var(--gradient-color);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Couleurs de fond */
+
+.bg-primary{
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+.btn-primary{
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+.btn-primary:hover, .btn-primary:focus{
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.bg-gradient{
+    background: var(--gradient-color);
+    color: #fff;
+}
+
+/* Style de la barre latérale */
+.sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    z-index: 996;
+    transition: all 0.3s;
+    padding: 20px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #aab7cf transparent;
+    box-shadow: 0px 0px 20px rgba(1, 41, 112, 0.1);
+    background-color: var(--secondary-color);
+}
+
+@media (max-width: 1199px) {
+    .sidebar {
+        left: -300px;
+    }
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+    height: 8px;
+    background-color: #fff;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: #aab7cf;
+}
+
+@media (min-width: 1200px) {
+    #main, #footer {
+        margin-left: 250px;
+    }
+}
+
+@media (max-width: 1199px) {
+    .toggle-sidebar .sidebar {
+        left: 0;
+    }
+}
+
+@media (min-width: 1200px) {
+    .toggle-sidebar #main, .toggle-sidebar #footer {
+        margin-left: 0;
+    }
+    .toggle-sidebar .sidebar {
+        left: -250px;
+    }
+}
+
+.sidebar-nav {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.sidebar-nav li {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.sidebar-nav .nav-item {
+    margin-bottom: 5px;
+}
+
+.sidebar-nav .nav-heading {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #899bbd;
+    font-weight: 600;
+    margin: 10px 0 5px 15px;
+}
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    transition: 0.3s;
+    padding: 10px 15px;
+    border-radius: 4px;
+    background-color: var(--primary-color); /* Utilise le bleu clair comme couleur de fond */
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: var(--secondary-color); /* Change en bleu foncé au survol */
+    color: #fff; /* Assure que le texte reste blanc au survol */
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--secondary-color); /* Bleu foncé pour l'état actif */
+    color: #fff; /* Texte blanc pour l'état actif */
+}
+
+.sidebar-nav .nav-link i {
+    font-size: 16px;
+    margin-right: 10px;
+    color: #fff;
+}
+
+.sidebar-nav .nav-link.collapsed {
+    color: #fff;
+}
+
+.sidebar-nav .nav-link.collapsed i {
+    color: #fff;
+}
+
+.sidebar-nav .nav-link:hover {
+    color: var(--secondary-color);
+    background: #f6f9ff;
+}
+
+.sidebar-nav .nav-link:hover i {
+    color: var(--secondary-color);
+}
+
+.sidebar-nav .nav-link.active {
+    color: var(--secondary-color);
+    background: #f6f9ff;
+}
+
+.sidebar-nav .nav-link.active i {
+    color: var(--secondary-color);
+}
+
+.sidebar-nav .nav-link .bi-chevron-down {
+    margin-right: 0;
+    transition: transform 0.2s ease-in-out;
+}
+
+.sidebar-nav .nav-link:not(.collapsed) .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+.sidebar-nav .nav-content {
+    padding: 5px 0 0 0;
+    margin: 0;
+    list-style: none;
+}
+
+.sidebar-nav .nav-content a {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    transition: 0.3s;
+    padding: 10px 0 10px 28px;
+}
+
+.sidebar-nav .nav-content a i {
+    font-size: 6px;
+    margin-right: 8px;
+    line-height: 0;
+    border-radius: 50%;
+}
+
+.sidebar-nav .nav-content a:hover, .sidebar-nav .nav-content a.active {
+    background-color: #fff;
+    color: var(--secondary-color);
+    border-radius: 4px;
+}
+
+.sidebar-nav .nav-content a.active i {
+    color: #fff;
+}
+/* Fin du style de la barre latérale */
+
+/* Style des Datatables */
+#example_info{
+    display: none !important;
+}
+
+.logo_hg > img{
+    height: 50px;
+    width: 80px;
+}
+
+.paginate_button.page-item{
+    z-index: 0 !important;
+}
+/* Fin du style des Datatables */
+
+/* Style du pied de page */
+.footer {
+    padding: 15px 0;
+    transition: all 0.3s;
+    box-shadow: 0px 0px 20px rgb(1 41 112 / 10%);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    font-size: 12px;
+    z-index: 100;
+}
+
+.footer .copyright {
+    text-align: center;
+    color: var(--secondary-color);
+}
+
+.footer .credits {
+    padding-top: 5px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--secondary-color);
+}
+/* Fin du style du pied de page */
+
+/* Style de l'en-tête */
+.logo {
+    line-height: 1;
+}
+
+@media (min-width: 1200px) {
+    .logo {
+        width: 300px;
+    }
+}
+
+.logo img {
+    max-height: 26px;
+    margin-right: 6px;
+}
+
+.logo span {
+    font-size: 26px;
+    font-weight: 700;
+    color: #012970;
+    font-family: "Nunito", sans-serif;
+}
+
+.header {
+    transition: all 0.5s;
+    z-index: 997;
+    height: 60px;
+    box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.1);
+    background-color: #fff;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.header .logo {
+    font-size: 30px;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.header .logo img {
+    max-height: 40px;
+    margin-right: 6px;
+}
+
+.header .logo span {
+    font-size: 26px;
+    font-weight: 700;
+    color: #012970;
+    font-family: "Nunito", sans-serif;
+}
+
+.header .toggle-sidebar-btn {
+    font-size: 32px;
+    padding-left: 10px;
+    cursor: pointer;
+    color: var(--secondary-color);
+}
+
+.header .search-bar {
+    min-width: 360px;
+    padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+    .header .search-bar {
+        min-width: auto;
+    }
+}
+
+.header .search-bar form {
+    margin-bottom: 0;
+}
+
+.header .search-bar input {
+    border: 0;
+    padding: 7px 38px 7px 8px;
+    border-radius: 4px;
+    transition: 0.3s;
+    height: 38px;
+    color: var(--secondary-color);
+    font-size: 14px;
+    outline: none !important;
+    background: #f6f9ff;
+}
+
+.header .search-bar input:focus {
+    border-color: var(--primary-color);
+}
+
+.header .search-bar button {
+    border: 0;
+    padding: 0;
+    margin-left: -30px;
+    background: none;
+}
+
+.header .search-bar button i {
+    color: var(--secondary-color);
+    font-size: 18px;
+}
+
+.header .search-bar button:hover i {
+    color: var(--primary-color);
+}
+
+.header .search-bar input::placeholder {
+    font-size: 14px;
+    color: rgba(1, 41, 112, 0.3);
+}
+
+.header .nav-item .nav-link {
+    font-size: 15px;
+    color: var(--secondary-color);
+    padding: 0 10px;
+}
+
+.header .nav-item .nav-link:hover, .header .nav-item .nav-link:focus {
+    color: var(--primary-color);
+}
+
+.header .nav-item .badge {
+    font-weight: 500;
+    font-size: 11px;
+    color: #fff;
+    padding: 3px 6px;
+    background-color: #4154f1;
+}
+
+.header .nav-item .badge.bg-danger {
+    background-color: #ff771d;
+}
+
+.header .nav-item .badge.bg-warning {
+    background-color: #ffbb55;
+}
+
+.header .nav-item .badge.bg-success {
+    background-color: #20c997;
+}
+
+.header .nav-item .badge.bg-primary {
+    background-color: #3b8beb;
+}
+
+.header .nav-item .badge.bg-info {
+    background-color: #47bac1;
+}
+
+.header .nav-item .badge.bg-dark {
+    background-color: #140e1f;
+}
+
+.header .nav-item .badge.bg-secondary {
+    background-color: #76838f;
+}
+
+.header .nav-item .badge.bg-muted {
+    background-color: #919ea7;
+}
+
+.header .nav-item .badge.bg-light {
+    background-color: #f7f8fa;
+}
+
+.header .nav-item .badge.bg-danger-light {
+    background-color: #ff771d;
+}
+
+.header .nav-item .badge.bg-warning-light {
+    background-color: #ffbb55;
+}
+
+.header .nav-item .badge.bg-success-light {
+    background-color: #20c997;
+}
+
+.header .nav-item .badge.bg-primary-light {
+    background-color: #3b8beb;
+}
+
+.header .nav-item .badge.bg-info-light {
+    background-color: #47bac1;
+}
+
+.header .nav-item .badge.bg-dark-light {
+    background-color: #140e1f;
+}
+
+.header .nav-item .badge.bg-secondary-light {
+    background-color: #76838f;
+}
+
+.header .nav-item .badge.bg-muted-light {
+    background-color: #919ea7;
+}
+
+.header .nav-item .badge.bg-light-light {
+    background-color: #f7f8fa;
+}
+
+/* Fin du style de l'en-tête */
+
+
+/* Fin du style de l'en-tête */
+
+
+/* End header Nav style */
+
+
+/* Dashboard client CSS*/
+
+.client-image-upload {
+    height: 150px;
+    width: 150px;
+    border-radius: 100%;
+    position: relative;
+    object-fit: cover;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.client-image-upload img {
+    object-fit: cover;
+    width: 145px;
+    height: 145px;
+    border-radius: 100%;
+}
+
+.client-image-upload > svg, .client-image-upload > span {
+    position: absolute;
+    bottom: 0;
+    right: 10px;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color); /* Remplace le marron par le bleu clair */
+    border-color: var(--primary-color); /* Remplace le marron par le bleu clair */
+}
+
+/* Tout le CSS custom doit avoir le prefixe avt-(css-class) */
+.btn-style {
+    font-size: 12px !important;
+}
+
+.home-card-height {
+    height: 165px !important;
+}
+
+.active_home_button {
+    background-color: #fff;
+    color: var(--secondary-color) !important; /* Utilise le bleu foncé */
+    border-radius: 4px;
+}
+
+.no-input-border-right {
+    border-bottom-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+.text-in-bold {
+    font-weight: bold !important;
+}
+
+.login-wrapper {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    background: linear-gradient(to top, #fff 45%, var(--primary-color) 40%); /* Dégradé blanc vers bleu clair */
+}
+
+.login-wrapper-content {
+    width: calc(382px + 96px);
+}
+
+.logo-icone {
+    height: 100px;
+}
+
+.login-border {
+    border-radius: .7rem;
+}
+
+.logo-header {
+    height: 60px;
+}
+
+.section-title .ligne::before {
+    content: "";
+    height: 20px;
+    border: 2px solid;
+    color: var(--secondary-color); /* Utilise le bleu foncé */
+    font-weight: bold;
+    margin-left: -20px;
+}
+
+.section-title {
+    display: flex;
+    margin: 10px 0px;
+}
+::-webkit-scrollbar {
+    width: 12px;
+    background-color: #f5f5f5; /* Couleur de fond de la scrollbar */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #007bff; /* Couleur du curseur */
+    border-radius: 10px; /* Arrondir les bords */
+    border: 2px solid #f5f5f5; /* Ajouter une bordure */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #0056b3; /* Couleur au survol */
+}

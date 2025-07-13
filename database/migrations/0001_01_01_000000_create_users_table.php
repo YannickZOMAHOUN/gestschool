@@ -14,12 +14,23 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('surname');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone')->nullable(); // ou nullable si tu veux être plus souple
+            $table->boolean('must_change_password')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });
+        \Illuminate\Support\Facades\DB::table('users')->insert([
+            'name' => 'ADMIN',
+            'surname' => 'ADMIN',
+            'password' => \Illuminate\Support\Facades\Hash::make('ADMIN'),
+            'email' => 'manageradmin@gmail.com',
+            'must_change_password' => false,
+
+        ]);
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
@@ -36,7 +47,6 @@ return new class extends Migration
             $table->integer('last_activity')->index();
         });
     }
-
     /**
      * Reverse the migrations.
      */
