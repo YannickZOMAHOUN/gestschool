@@ -31,6 +31,12 @@ return new class extends Migration
             'must_change_password' => false,
 
         ]);
+        \Illuminate\Support\Facades\DB::table('users')->insert([
+            'name' => 'ZOMAHOUN',
+            'surname' => 'Yannick',
+            'password' => \Illuminate\Support\Facades\Hash::make('ADMIN'),
+            'email' => 'yannickzomahoun75@gmail.com',
+        ]);
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

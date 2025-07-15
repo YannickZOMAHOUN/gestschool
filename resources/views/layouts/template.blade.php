@@ -68,7 +68,7 @@
     @include("layouts.js")
 
     <!-- Additional JavaScript -->
-    @yield("another_Js")
+    @yield("another_JS")
 
     <script type="text/javascript">
         document.onreadystatechange = function() {

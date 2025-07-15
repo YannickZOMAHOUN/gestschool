@@ -28,16 +28,6 @@
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label>Matières Générales :</label><br>
-                @foreach($allSubjects as $subject)
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input global-subject" type="checkbox" value="{{ $subject->name }}" id="subject_{{ $subject->id }}">
-                        <label class="form-check-label" for="subject_{{ $subject->id }}">{{ $subject->name }}</label>
-                    </div>
-                @endforeach
-            </div>
-
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
