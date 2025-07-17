@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Bulletin de notes - Semestre {{ $semester }}</title>
+    <title>Fiche à Collationner - Semestre {{ $semester }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
         .header { text-align: center; margin-bottom: 20px; }
@@ -19,18 +19,27 @@
 <body>
     <div class="header">
         <h2>ÉTABLISSEMENT SCOLAIRE</h2>
-        <p>BULLETIN DE NOTES - SEMESTRE {{ $semester }}</p>
+        <p>Fiche à Collationner - SEMESTRE {{ $semester }}</p>
         <p>Année scolaire: {{ $year->year }} | Classe: {{ $classroom->name }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th rowspan="2" style="width: 15%;">Élèves</th>
+                <th rowspan="2">Élèves</th>
                 @foreach($subjects as $subject)
                     <th colspan="2">{{ $subject->name }}</th>
                 @endforeach
-                <th rowspan="2">Moy. Gén.</th>
+                @if ($semester == 1)
+                    <th rowspan="2">Moy. Gén.</th>
+                    <th rowspan="2">Rang</th>
+                @else
+                    <th rowspan="2">Moy. S1</th>
+                    <th rowspan="2">Moy. S2</th>
+                    <th rowspan="2">Moy. Annuelle</th>
+                    <th rowspan="2">Rang S2</th>
+                    <th rowspan="2">Rang Annuel</th>
+                @endif
             </tr>
             <tr>
                 @foreach($subjects as $subject)
@@ -43,18 +52,38 @@
             @foreach($students as $student)
                 <tr>
                     <td class="student-name">{{ $student->surname }} {{ $student->name }}</td>
+
                     @foreach($subjects as $subject)
-                        <td>{{ $notesData[$student->id][$subject->id] ?? '-' }}</td>
-                        <td>{{ $coefficients[$subject->id] }}</td>
+                        @php
+                            $note = $notesData[$student->id][$semester][$subject->id] ?? '-';
+                            $coef = $coefficients[$subject->id] ?? '-';
+                        @endphp
+                        <td>{{ $note }}</td>
+                        <td>{{ $coef }}</td>
                     @endforeach
-                    <td><strong>{{ $moyennesGenerales[$student->id] }}</strong></td>
+
+                    @if ($semester == 1)
+                        <td><strong>{{ $moyennesS1[$student->id] ?? '-' }}</strong></td>
+                        <td>{{ $rangsS1[$student->id] ?? '-' }}</td>
+                    @else
+                        <td>{{ $moyennesS1[$student->id] ?? '-' }}</td>
+                        <td><strong>{{ $moyennesS2[$student->id] ?? '-' }}</strong></td>
+                        <td><strong>{{ $moyennesAnnuelles[$student->id] ?? '-' }}</strong></td>
+                        <td>{{ $rangsS2[$student->id] ?? '-' }}</td>
+                        <td>{{ $rangsAnnuels[$student->id] ?? '-' }}</td>
+                    @endif
                 </tr>
             @endforeach
         </tbody>
     </table>
 
     <div class="footer">
-        <p>Moy. Gén. = Moyenne Générale (pondérée par les coefficients)</p>
+        <p>
+            Moy. = Moyenne pondérée <br>
+            @if($semester == 2)
+                Moy. Annuelle = (Moy. S1 + Moy. S2) / 2
+            @endif
+        </p>
         <div style="text-align: right;">
             <div class="signature">Le Directeur</div>
         </div>

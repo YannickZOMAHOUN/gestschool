@@ -3,13 +3,13 @@
 @section('content')
 <div class="container-fluid py-4">
     <div class="card elegant-card shadow-lg mb-5">
-        <!-- Card Header with Gradient Background -->
+        <!-- Card Header -->
         <div class="card-header elegant-card-header bg-gradient-primary">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-file-export header-icon me-3 text-white"></i>
                     <div>
-                        <h5 class="mb-0 text-white fw-bold">Exportation des Notes</h5>
+                        <h5 class="mb-0 text-white fw-bold">Exportation des données</h5>
                         <small class="text-white-80">Générez des fichiers Excel des notes par classe</small>
                     </div>
                 </div>
@@ -21,100 +21,92 @@
         <div class="card-body elegant-card-body bg-light">
             <form method="GET" action="{{ route('notes.exportcard') }}" class="needs-validation" novalidate>
                 @csrf
-                <!-- Selection Row -->
                 <div class="row g-4 mb-4">
-                    <!-- Year Selection -->
+                    <!-- Année scolaire -->
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <label class="form-label elegant-label fw-bold">Année scolaire</label>
-                            <div class="input-group elegant-input-group">
-                                <span class="input-group-text elegant-input-prepend bg-white">
-                                    <i class="fas fa-calendar text-primary"></i>
-                                </span>
-                                <select name="year_id" id="export_year_id" class="form-select elegant-select" required>
-                                    <option value="">-- Sélectionnez --</option>
-                                    @foreach($years as $year)
-                                        <option value="{{ $year->id }}">{{ $year->year }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="invalid-feedback elegant-feedback">Veuillez sélectionner une année scolaire</div>
+                        <label class="form-label fw-bold">Année scolaire</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-calendar text-primary"></i>
+                            </span>
+                            <select name="year_id" id="export_year_id" class="form-select" required>
+                                <option value="">-- Sélectionnez --</option>
+                                @foreach($years as $year)
+                                    <option value="{{ $year->id }}">{{ $year->year }}</option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner une année scolaire</div>
                         </div>
                     </div>
 
-                    <!-- Sector Selection -->
+                    <!-- Filière -->
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <label class="form-label elegant-label fw-bold">Filière</label>
-                            <div class="input-group elegant-input-group">
-                                <span class="input-group-text elegant-input-prepend bg-white">
-                                    <i class="fas fa-project-diagram text-primary"></i>
-                                </span>
-                                <select name="sector_id" id="export_sector_id" class="form-select elegant-select" disabled required>
-                                    <option value="">-- Choisir année d'abord --</option>
-                                </select>
-                            </div>
-                            <div class="invalid-feedback elegant-feedback">Veuillez sélectionner une filière</div>
+                        <label class="form-label fw-bold">Filière</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-project-diagram text-primary"></i>
+                            </span>
+                            <select name="sector_id" id="export_sector_id" class="form-select" disabled required>
+                                <option value="">-- Choisir année d'abord --</option>
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner une filière</div>
                         </div>
                     </div>
 
-                    <!-- Promotion Selection -->
+                    <!-- Promotion -->
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <label class="form-label elegant-label fw-bold">Promotion</label>
-                            <div class="input-group elegant-input-group">
-                                <span class="input-group-text elegant-input-prepend bg-white">
-                                    <i class="fas fa-layer-group text-primary"></i>
-                                </span>
-                                <select name="promotion_id" id="export_promotion_id" class="form-select elegant-select" disabled required>
-                                    <option value="">-- Choisir filière d'abord --</option>
-                                </select>
-                            </div>
-                            <div class="invalid-feedback elegant-feedback">Veuillez sélectionner une promotion</div>
+                        <label class="form-label fw-bold">Promotion</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-layer-group text-primary"></i>
+                            </span>
+                            <select name="promotion_id" id="export_promotion_id" class="form-select" disabled required>
+                                <option value="">-- Choisir filière d'abord --</option>
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner une promotion</div>
                         </div>
                     </div>
 
-                    <!-- Classroom Selection -->
+                    <!-- Classe -->
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <label class="form-label elegant-label fw-bold">Classe</label>
-                            <div class="input-group elegant-input-group">
-                                <span class="input-group-text elegant-input-prepend bg-white">
-                                    <i class="fas fa-school text-primary"></i>
-                                </span>
-                                <select name="classroom_id" id="export_classroom_id" class="form-select elegant-select" disabled required>
-                                    <option value="">-- Choisir promotion d'abord --</option>
-                                </select>
-                            </div>
-                            <div class="invalid-feedback elegant-feedback">Veuillez sélectionner une classe</div>
+                        <label class="form-label fw-bold">Classe</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-school text-primary"></i>
+                            </span>
+                            <select name="classroom_id" id="export_classroom_id" class="form-select" disabled required>
+                                <option value="">-- Choisir promotion d'abord --</option>
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner une classe</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Semester Selection -->
+                <!-- Semestre -->
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-label elegant-label fw-bold">Semestre</label>
-                            <div class="input-group elegant-input-group">
-                                <span class="input-group-text elegant-input-prepend bg-white">
-                                    <i class="fas fa-calendar-alt text-primary"></i>
-                                </span>
-                                <select class="form-select elegant-select" name="semester" id="semester" required>
-                                    <option value="" disabled selected>-- Sélectionnez --</option>
-                                    <option value="1">Semestre 1</option>
-                                    <option value="2">Semestre 2</option>
-                                </select>
-                            </div>
-                            <div class="invalid-feedback elegant-feedback">Veuillez sélectionner un semestre</div>
+                        <label class="form-label fw-bold">Semestre</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-calendar-alt text-primary"></i>
+                            </span>
+                            <select class="form-select" name="semester" id="semester" required>
+                                <option value="" disabled selected>-- Sélectionnez --</option>
+                                <option value="1">Semestre 1</option>
+                                <option value="2">Semestre 2</option>
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner un semestre</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="d-flex justify-content-center mt-5">
-                    <button type="submit" name="export_type" value="fiche_collation" class="btn btn-success btn-lg shadow-sm">
-                        <i class="fas fa-file-excel me-2"></i>Générer la fiche de collation
+                <!-- Boutons d'action -->
+                <div class="d-flex justify-content-center mt-5 gap-3">
+                    <button type="submit" name="export_type" value="fiche_collation" class="btn btn-success btn-lg">
+                        <i class="fas fa-file-pdf me-2"></i> Fiche de collation
+                    </button>
+                    <button type="submit" name="export_type" value="fiche_bulletin" class="btn btn-success btn-lg">
+                        <i class="fas fa-file-pdf me-2"></i> Bulletins de notes
                     </button>
                 </div>
             </form>
@@ -141,8 +133,7 @@
                 }
                 selectElement.disabled = false;
             })
-            .catch(error => {
-                console.error('Error fetching options:', error);
+            .catch(() => {
                 selectElement.innerHTML += `<option value="" disabled>Erreur de chargement</option>`;
                 selectElement.disabled = false;
             });
@@ -192,23 +183,22 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
         setupFormListeners('export_year_id', 'export_sector_id', 'export_promotion_id', 'export_classroom_id');
 
-        // Form validation
+        // Validation Bootstrap
         const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
+        forms.forEach(form => {
             form.addEventListener('submit', event => {
                 if (!form.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();
                 }
                 form.classList.add('was-validated');
-            }, false);
+            });
         });
     });
 </script>
-
 <style>
     .elegant-card {
         border: none;

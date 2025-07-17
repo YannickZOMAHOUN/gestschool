@@ -201,110 +201,160 @@ public function update(Request $request, Note $note)
 }
 public function exportcard(Request $request)
 {
-    // Validation des paramètres
     $request->validate([
         'year_id' => 'required|exists:years,id',
         'classroom_id' => 'required|exists:promotion_classrooms,id',
         'semester' => 'required|in:1,2',
+        'export_type' => 'required|in:fiche_collation,fiche_bulletin',
     ]);
 
     $yearId = $request->year_id;
     $classroomId = $request->classroom_id;
     $semester = $request->semester;
+    $exportType = $request->export_type;
 
-    // Charger les enregistrements avec étudiants pour la classe et l'année
     $recordings = Recording::with('student')
         ->where('classroom_id', $classroomId)
         ->where('year_id', $yearId)
         ->get();
 
-    // Extraire les étudiants liés aux enregistrements
     $students = $recordings->pluck('student')->filter();
+    $subjects = Subject::whereHas('ratios', fn($q) =>
+        $q->where('classroom_id', $classroomId)->where('year_id', $yearId)
+    )->orderBy('name')->get();
 
-    // Charger les matières associées à la classe via les ratios
-    $subjects = Subject::whereHas('ratios', function($query) use ($classroomId, $yearId) {
-        $query->where('classroom_id', $classroomId)
-              ->where('year_id', $yearId);
-    })->orderBy('name')->get();
-
-    // Préparer les données de notes et coefficients
-    $notesData = [];
     $coefficients = [];
-
     foreach ($subjects as $subject) {
-        // Récupérer le coefficient pour chaque matière
-        $ratio = Ratio::where([
-            ['subject_id', $subject->id],
-            ['classroom_id', $classroomId],
-            ['year_id', $yearId],
-        ])->first();
-
-        $coefficients[$subject->id] = $ratio ? $ratio->coefficient : 1;
+        $coef = Ratio::where([
+            'subject_id' => $subject->id,
+            'classroom_id' => $classroomId,
+            'year_id' => $yearId,
+        ])->value('coefficient') ?? 1;
+        $coefficients[$subject->id] = $coef;
     }
+
+    $notesData = [];
+    $moyennesS1 = [];
+    $moyennesS2 = [];
+    $moyennesAnnuelles = [];
 
     foreach ($students as $student) {
-        $totalNotesPonderees = 0;
-        $totalCoefficients = 0;
+        $recording = $student->recordings->first();
+        if (!$recording) continue;
 
-        foreach ($subjects as $subject) {
-            // Récupérer les notes du semestre
-            $note = Note::where([
-                ['recording_id', $student->recordings->first()->id],
-                ['subject_id', $subject->id],
-                ['semester', $semester],
-            ])->first();
+        $semestreData = [1 => 0, 2 => 0];
+        $totalCoef = [1 => 0, 2 => 0];
 
-            $moyInterros = $note ? (array_sum($note->interros) / count($note->interros)) : 0;
-            $devoir1 = $note ? $note->devoir1 : 0;
-            $devoir2 = $note ? $note->devoir2 : 0;
+        foreach ([1, 2] as $sem) {
+            foreach ($subjects as $subject) {
+                if (strtoupper($subject->name) === 'EPS' && $student->aptitude !== 'Apte') {
+                    $notesData[$student->id][$sem][$subject->id] = 'Dispensé(e)';
+                    continue;
+                }
 
-            // Calcul de la moyenne non pondérée
-            $moyenne = ($moyInterros + $devoir1 + $devoir2) / 3;
-            $moyenneArrondie = round($moyenne, 2);
+                $note = Note::where([
+                    'recording_id' => $recording->id,
+                    'subject_id' => $subject->id,
+                    'semester' => $sem,
+                ])->first();
 
-            // Stocker la moyenne non pondérée
-            $notesData[$student->id][$subject->id] = $moyenneArrondie;
+                $interros = $note?->interros ?? [];
+                $nb = count($interros);
+                $moyInterros = $nb > 0 ? array_sum($interros) / $nb : null;
 
-            // Calcul pour la moyenne générale pondérée
-            $totalNotesPonderees += $moyenneArrondie * $coefficients[$subject->id];
-            $totalCoefficients += $coefficients[$subject->id];
+                $d1 = $note?->devoir1;
+                $d2 = $note?->devoir2;
+
+                $moyenne = match (true) {
+                    $moyInterros === null && $d1 && $d2 => ($d1 + $d2) / 2,
+                    $moyInterros === null && $d1 => $d1,
+                    $moyInterros === null && $d2 => $d2,
+                    $moyInterros === null => 0,
+                    default => collect([$moyInterros, $d1, $d2])->filter()->avg(),
+                };
+
+                $moy = round($moyenne, 2);
+                $notesData[$student->id][$sem][$subject->id] = $moy;
+
+                $coef = $coefficients[$subject->id];
+                $semestreData[$sem] += $moy * $coef;
+                $totalCoef[$sem] += $coef;
+            }
         }
 
-        // Calcul de la moyenne générale
-        $moyenneGenerale = $totalCoefficients > 0
-            ? round($totalNotesPonderees / $totalCoefficients, 2)
-            : 0;
+        $m1 = $totalCoef[1] ? round($semestreData[1] / $totalCoef[1], 2) : 0;
+        $m2 = $totalCoef[2] ? round($semestreData[2] / $totalCoef[2], 2) : 0;
 
-        $moyennesGenerales[$student->id] = $moyenneGenerale;
+        if ($semester == 1) {
+            $moyennesS1[$student->id] = $m1;
+        } else {
+            $moyennesS1[$student->id] = $m1;
+            $moyennesS2[$student->id] = $m2;
+            $moyennesAnnuelles[$student->id] = round(($m1 + $m2) / 2, 2);
+        }
     }
 
-    // Récupérer les informations contextuelles
-    $classroom = PromotionClassroom::findOrFail($classroomId);
-    $year = Year::findOrFail($yearId);
+    // Rangs
+    $rangsS1 = $this->calculerRangs($moyennesS1);
+    $rangsS2 = $semester == 2 ? $this->calculerRangs($moyennesS2) : [];
+    $rangsAnnuels = $semester == 2 ? $this->calculerRangs($moyennesAnnuelles) : [];
 
-    // Génération du PDF
-    $pdf = PDF::loadView('dashboard.notes.exports.fiche', [
+    $year = Year::findOrFail($yearId);
+    $classroom = PromotionClassroom::findOrFail($classroomId);
+
+    $view = $exportType === 'fiche_collation'
+        ? 'dashboard.notes.exports.fiche'
+        : 'dashboard.notes.exports.bulletin';
+
+    // Déterminer l'orientation en fonction du type d'export
+    $orientation = $exportType === 'fiche_collation' ? 'landscape' : 'portrait';
+
+    $pdf = PDF::loadView($view, [
         'year' => $year,
         'classroom' => $classroom,
         'students' => $students,
         'subjects' => $subjects,
-        'notesData' => $notesData,
         'coefficients' => $coefficients,
-        'moyennesGenerales' => $moyennesGenerales,
+        'notesData' => $notesData,
         'semester' => $semester,
-    ])->setPaper('a4', 'landscape');
+        'moyennesS1' => $moyennesS1,
+        'moyennesS2' => $moyennesS2,
+        'moyennesAnnuelles' => $moyennesAnnuelles,
+        'rangsS1' => $rangsS1,
+        'rangsS2' => $rangsS2,
+        'rangsAnnuels' => $rangsAnnuels,
+    ])->setPaper('a4', $orientation); // Utilisation de la variable d'orientation
 
-    // Retour en stream avec en-têtes pour ouverture dans nouvel onglet
+    $filename = $exportType === 'fiche_collation'
+        ? "fiche_de_collation_{$semester}_{$year->year}_{$classroom->name}.pdf"
+        : "bulletin_notes_{$semester}_{$year->year}_{$classroom->name}.pdf";
+
     return response()->streamDownload(
-        function () use ($pdf) {
-            echo $pdf->stream();
-        },
-        "bulletin_s{$semester}_{$year->year}_{$classroom->name}.pdf",
-        [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="bulletin.pdf"'
-        ]
+        fn() => print($pdf->stream()),
+        $filename,
+        ['Content-Type' => 'application/pdf']
     );
+}
+private function calculerRangs(array $moyennes): array
+{
+    arsort($moyennes);
+    $rangs = [];
+    $rang = 1;
+    $prevMoy = null;
+    $count = 0;
+
+    foreach ($moyennes as $id => $moy) {
+        $count++;
+        if ($moy === $prevMoy) {
+            $rangs[$id] = $rang;
+        } else {
+            $rang = $count;
+            $rangs[$id] = $rang;
+            $prevMoy = $moy;
+        }
+    }
+
+    return $rangs;
 }
 
 }

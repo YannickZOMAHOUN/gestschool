@@ -52,6 +52,12 @@
                         <span>Exporter les notes</span>
                     </a>
                 </li>
+                 <li>
+                    <a href="{{ route('get.cards') }}">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Bulletins</span>
+                    </a>
+                </li>
             </ul>
         </li>
 

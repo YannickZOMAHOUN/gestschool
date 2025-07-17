@@ -316,6 +316,7 @@
                         <td>${student.surname}</td>
                         <td>
                             <input type="hidden" name="students[]" value="${student.recording_id}">
+                            <input type="hidden" class="student-aptitude" value="${student.aptitude}">
                             <div class="input-group">
                                 <input type="number" name="grades[]" class="form-control grade-input" step="0.01" min="0" max="20" placeholder="0.00">
                                 <span class="input-group-text">/20</span>
@@ -376,15 +377,23 @@
                             const recordingId = row.querySelector('input[name="students[]"]').value;
                             const statusCell = row.querySelector('.status-cell');
                             const gradeInput = row.querySelector('.grade-input');
+                            const aptitude = row.querySelector('.student-aptitude').value;
 
-                            if (dispensations.includes(parseInt(recordingId))) {
-                                statusCell.innerHTML = '<span class="badge bg-warning text-dark">Dispensé</span>';
+                            // Vérifier si l'étudiant est dispensé ou non apte
+                            const isDispensed = dispensations.includes(parseInt(recordingId));
+                            const isNotApte = aptitude !== 'Apte';
+
+                            if (isDispensed || isNotApte) {
+                                const statusText = isDispensed ? 'Dispensé' : 'Non Apte';
+                                const badgeClass = isDispensed ? 'bg-warning text-dark' : 'bg-danger';
+
+                                statusCell.innerHTML = `<span class="badge ${badgeClass}">${statusText}</span>`;
                                 gradeInput.value = '';
                                 gradeInput.disabled = true;
-                                gradeInput.placeholder = 'Dispensé';
+                                gradeInput.placeholder = statusText;
                                 gradeInput.classList.add('bg-light');
                             } else {
-                                statusCell.innerHTML = '<span class="badge bg-success">Actif</span>';
+                                statusCell.innerHTML = '<span class="badge bg-success">Apte</span>';
                                 gradeInput.disabled = false;
                                 gradeInput.placeholder = '0.00';
                                 gradeInput.classList.remove('bg-light');
@@ -434,7 +443,7 @@
 
                     const data = await res.json();
                     document.querySelectorAll('input[name="grades[]"]').forEach((input, index) => {
-                        if (!input.disabled) { // Ne pas remplir pour les dispensés
+                        if (!input.disabled) { // Ne pas remplir pour les dispensés/non aptes
                             const rid = recording_ids[index];
                             if (data[rid]) input.value = data[rid];
                         }
@@ -468,7 +477,7 @@
             const val = globalNoteInput.value;
             if (val >= 0 && val <= 20) {
                 document.querySelectorAll('input[name="grades[]"]').forEach(input => {
-                    if (!input.disabled) { // Ne pas remplir pour les dispensés
+                    if (!input.disabled) { // Ne pas remplir pour les dispensés/non aptes
                         input.value = val;
                         input.classList.add('bg-success-light');
                         setTimeout(() => input.classList.remove('bg-success-light'), 1000);

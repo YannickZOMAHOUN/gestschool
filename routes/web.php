@@ -65,6 +65,7 @@ Route::middleware(['auth', ForcePasswordChange::class])->group(function () {
     Route::get('/notes/export', [\App\Http\Controllers\NoteController::class, 'export_view'])->name('export_view');
     Route::get('/notes/fetch', [\App\Http\Controllers\NoteController::class, 'getStudentNotes'])->name('get.student.notes');
     Route::get('/note/{student}', [\App\Http\Controllers\NoteController::class, 'show'])->name('note.show');
+Route::get('/api/students-dispensations/{classroomId}/{yearId}', [\App\Http\Controllers\NoteController::class, 'getStudents'])->name('students.dispensations');
 
     Route::get('/api/notes-by-class-semester/{classroom_id}/{year_id}/{semester}', [\App\Http\Controllers\NoteController::class, 'byClassAndSemester']);
     Route::put('/api/notes/{note}', [\App\Http\Controllers\NoteController::class, 'update']);
