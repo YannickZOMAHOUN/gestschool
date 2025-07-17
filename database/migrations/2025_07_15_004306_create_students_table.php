@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
+            $table->string('matricule')->nullable();
+            $table->string('name');
+            $table->string('surname');
+            $table->enum('sex', ['M', 'F']);
+            $table->date('birthday');
+            $table->string('birthplace');
+            $table->string('number');
+            $table->string('aptitude');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -5,11 +5,15 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Middleware\ForcePasswordChange;
-
+use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () { return redirect('login');});
 
 Auth::routes(['register'=>false]);
+
+Route::middleware(['auth','role:Parent'])->group(function () {
+    Route::get('/parent/dashboard', [\App\Http\Controllers\ParentController::class, 'index'])->name('parent.dashboard');
+});
 
 // Routes accessibles dès l’authentification (même si mot de passe à changer)
 Route::middleware('auth')->group(function () {
@@ -26,6 +30,8 @@ Route::middleware(['auth', ForcePasswordChange::class])->group(function () {
     Route::resource('ratio', \App\Http\Controllers\RatioController::class);
     Route::resource('subject', \App\Http\Controllers\SubjectController::class);
     Route::resource('sectorbyyear', \App\Http\Controllers\SectorYearController::class);
+    Route::resource('student', \App\Http\Controllers\StudentController::class);
+    Route::resource('note', \App\Http\Controllers\NoteController::class);
     Route::get('disable/{year}', [\App\Http\Controllers\YearController::class, 'disableyear'])->name('disable_year');
     Route::get('activate/{year}', [\App\Http\Controllers\YearController::class, 'activateyear'])->name('activate_year');
     Route::get('disable/{sector}', [\App\Http\Controllers\SectorController::class, 'disablesector'])->name('disable_sector');
@@ -47,5 +53,24 @@ Route::middleware(['auth', ForcePasswordChange::class])->group(function () {
     Route::get('/api/ratios/sectors/{yearId}', [\App\Http\Controllers\RatioController::class, 'getSectorsByYear']);
     Route::get('/api/ratios/promotions/{yearId}/{sectorId}', [\App\Http\Controllers\RatioController::class, 'getPromotionsByYearAndSector']);
     Route::get('/api/ratios/data/{promotionId}/{yearId}', [\App\Http\Controllers\RatioController::class, 'getSubjectsAndClasses']);
+    Route::post('/import', [\App\Http\Controllers\StudentController::class, 'import'])->name('import');
+    Route::get('/students/{year}/{sector}/{promotion}/{classroom}', [\App\Http\Controllers\StudentController::class, 'getByFilter']);
+    Route::get('/api/sectors-by-year/{yearId}', [\App\Http\Controllers\StudentController::class, 'getSectorsByYear']);
+    Route::get('/api/promotions-by-year-sector/{yearId}/{sectorId}', [\App\Http\Controllers\StudentController::class, 'getPromotionsByYearSector']);
+    Route::get('/api/classes-by-promotion/{promotionId}', [\App\Http\Controllers\StudentController::class, 'getClassesByPromotion']);
+    Route::get('/api/students-by-class/{classroom}/{year}', [\App\Http\Controllers\NoteController::class, 'getStudents']);
+    Route::get('/api/subjects-with-ratios/{classroom}/{year}', [\App\Http\Controllers\NoteController::class, 'getSubjectsWithRatios']);
+    Route::post('/api/notes/existing', [\App\Http\Controllers\NoteController::class, 'getExistingNotes']);
+    Route::get('/notes/export/download', [\App\Http\Controllers\NoteController::class, 'export'])->name('notes.export');
+    Route::get('/notes/export', [\App\Http\Controllers\NoteController::class, 'export_view'])->name('export_view');
+    Route::get('/notes/fetch', [\App\Http\Controllers\NoteController::class, 'getStudentNotes'])->name('get.student.notes');
+    Route::get('/note/{student}', [\App\Http\Controllers\NoteController::class, 'show'])->name('note.show');
+
+    Route::get('/api/notes-by-class-semester/{classroom_id}/{year_id}/{semester}', [\App\Http\Controllers\NoteController::class, 'byClassAndSemester']);
+    Route::put('/api/notes/{note}', [\App\Http\Controllers\NoteController::class, 'update']);
+
+    Route::get('/bulletins', [\App\Http\Controllers\NoteController::class, 'getcards'])->name('get.cards');
+    Route::get('/notes/export/fiche', [\App\Http\Controllers\NoteController::class, 'exportcard'])->name('notes.exportcard');
+
 });
 

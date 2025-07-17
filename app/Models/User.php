@@ -11,6 +11,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'surname',
         'email',
         'phone',
         'password',
@@ -43,5 +44,15 @@ class User extends Authenticatable
     public function hasRole($roleName)
     {
         return $this->roles->contains('name', $roleName);
+    }
+    public function assignRole($roleName)
+    {
+        $role = Role::where('name', $roleName)->firstOrFail();
+        $this->roles()->syncWithoutDetaching([$role->id]);
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class);
     }
 }

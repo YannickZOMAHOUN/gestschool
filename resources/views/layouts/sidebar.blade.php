@@ -35,19 +35,19 @@
             </a>
             <ul id="notes-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="#">
+                    <a href="{{ route('note.index') }}">
                         <i class="fas fa-circle-notch"></i>
                         <span>Consulter les notes</span>
                     </a>
                 </li>
                 <li>
-                    <a href="">
+                    <a href="{{ route('note.create') }}">
                         <i class="fas fa-circle-notch"></i>
                         <span>Saisir une note</span>
                     </a>
                 </li>
                 <li>
-                    <a href="">
+                    <a href="{{ route('export_view') }}">
                         <i class="fas fa-circle-notch"></i>
                         <span>Exporter les notes</span>
                     </a>
@@ -66,13 +66,13 @@
             </a>
             <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="">
+                    <a href="{{ route('student.index') }}">
                         <i class="fas fa-circle-notch"></i>
                         <span>Liste des élèves</span>
                     </a>
                 </li>
                 <li>
-                    <a href="">
+                    <a href="{{ route('student.create') }}">
                         <i class="fas fa-circle-notch"></i>
                         <span>Inscrire un élève</span>
                     </a>
@@ -157,7 +157,7 @@
             </div>
             <div class="user-info">
                 <span class="user-name">{{ auth()->user()->surname . ' ' . auth()->user()->name }}</span>
-                <span class="user-role">Administrateur</span>
+                <span class="user-role">{{ auth()->user()->roles->first()->name ?? 'Aucun rôle' }}</span>
             </div>
         </div>
     </div>

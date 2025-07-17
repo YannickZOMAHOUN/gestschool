@@ -24,7 +24,7 @@ class ForcePasswordChange
                 return redirect()->route('password.change.form');
             }
         }
-
+         
         return $next($request);
     }
 }

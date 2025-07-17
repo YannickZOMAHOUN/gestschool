@@ -58,11 +58,18 @@
 
 
 
-    <footer id="footer" class="footer">
+    <footer id="footer" class="footer" role="contentinfo">
+    <div class="container">
         <div class="copyright">
-            &copy; 2024 Copyright <strong><span>SCHOOL MANAGER</span> </strong>  powered by <strong> <span class="fw-bold">Yann SOLUTIONS</span> </strong>
+            <p>
+                © <time datetime="2024">2024</time> Copyright
+                <strong><span>SCHOOL MANAGER</span></strong>.
+                Powered by <strong><span class="fw-bold">BIG MAN TECH</span></strong>.
+                Tous droits réservés.
+            </p>
         </div>
-    </footer>
+    </div>
+</footer>
 
     <!-- Include JavaScript files -->
     @include("layouts.js")
