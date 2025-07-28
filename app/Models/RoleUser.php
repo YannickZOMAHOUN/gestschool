@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class RoleUser extends Model
 {
+    protected $table = 'role_user';
    protected $fillable = ['user_id', 'role_id'];
 
     // Un rôle appartient à plusieurs utilisateurs
     public function users()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class);
     }
     public function roles()
     {

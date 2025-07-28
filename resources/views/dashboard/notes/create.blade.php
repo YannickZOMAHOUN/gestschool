@@ -163,7 +163,7 @@
 @endsection
 
 @section('another_JS')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/sweetalert.js') }}"></script>
 <script>
     /**
      * Affiche une notification toast
@@ -171,7 +171,7 @@
      * @param {string} title - Message à afficher
      * @param {string} position - Position de la notification
      */
-    function showToast(icon, title, position = 'top-end') {
+   function showToast(icon, title, position = 'top-end') {
         const Toast = Swal.mixin({
             toast: true,
             position: position,
@@ -309,6 +309,8 @@
                 // Remplissage du tableau des étudiants
                 notesTableBody.innerHTML = '';
                 students.forEach(student => {
+                    console.log(student);
+
                     const row = document.createElement('tr');
                     row.className = 'align-middle';
                     row.innerHTML = `

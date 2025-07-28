@@ -183,16 +183,6 @@ public function update(Request $request, $id)
             'aptitude' => $request->aptitude,
         ]);
 
-            $parent = User::create([
-            'name' => $student->surname . ' ' . $student->name,
-            'email' => 'parent_' . $student->matricule . '@lyteb.com',
-            'password' => Hash::make('parent' . $student->matricule),
-            'must_change_password' => false,
-        ]);
-        $parent->assignRole('Parent');
-
-        // Liaison élève-parent
-        $student->update(['user_id' => $parent->id]);
         // Vérifier que l'élève n'est pas déjà enregistré dans cette classe
         $existingRecording = Recording::where([
             'student_id' => $student->id,
@@ -266,32 +256,32 @@ public function update(Request $request, $id)
     }
         public function getByFilter($year, $sector, $promotion, $classroom)
     {
-    try {
-        $students = Student::select(
-                'students.id',
-                'students.matricule',
-                'students.name',
-                'students.surname',
-                'students.sex',
-                'students.birthday',
-                'students.birthplace',
-                'students.number',
-                'students.aptitude'
-            )
-            ->join('recordings', 'students.id', '=', 'recordings.student_id')
-            ->join('promotion_classrooms', 'recordings.classroom_id', '=', 'promotion_classrooms.id')
-            ->where('recordings.year_id', $year)
-            ->where('promotion_classrooms.sector_id', $sector)
-            ->where('promotion_classrooms.promotion_sector_id', $promotion)
-            ->where('recordings.classroom_id', $classroom)
-            ->get();
+        try {
+            $students = Student::select(
+                    'students.id',
+                    'students.matricule',
+                    'students.name',
+                    'students.surname',
+                    'students.sex',
+                    'students.birthday',
+                    'students.birthplace',
+                    'students.number',
+                    'students.aptitude'
+                )
+                ->join('recordings', 'students.id', '=', 'recordings.student_id')
+                ->join('promotion_classrooms', 'recordings.classroom_id', '=', 'promotion_classrooms.id')
+                ->where('recordings.year_id', $year)
+                ->where('promotion_classrooms.sector_id', $sector)
+                ->where('promotion_classrooms.promotion_sector_id', $promotion)
+                ->where('recordings.classroom_id', $classroom)
+                ->get();
 
-        return response()->json(['data' => $students]);
-    } catch (\Exception $e) {
-        Log::error("Erreur getByFilter: " . $e->getMessage());
-        return response()->json(['data' => []], 500);
+            return response()->json(['data' => $students]);
+        } catch (\Exception $e) {
+            Log::error("Erreur getByFilter: " . $e->getMessage());
+            return response()->json(['data' => []], 500);
+        }
     }
-}
  public function import(Request $request)
     {
         $request->validate([

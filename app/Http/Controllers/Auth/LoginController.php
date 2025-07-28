@@ -21,14 +21,10 @@ class LoginController extends Controller
 
 protected function authenticated(Request $request, $user)
 {
-    if ($user->hasRole('Parent')) {
-        return redirect()->route('parent.dashboard');
-    }
 
     if ($user->must_change_password) {
         return redirect()->route('password.change.form');
     }
-
     return redirect()->intended($this->redirectPath());
 }
 

@@ -51,8 +51,4 @@ class User extends Authenticatable
         $this->roles()->syncWithoutDetaching([$role->id]);
     }
 
-    public function student()
-    {
-        return $this->hasOne(Student::class);
-    }
 }

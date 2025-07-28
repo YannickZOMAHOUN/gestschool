@@ -122,7 +122,7 @@
 </div>
 @endsection
 
-@section("another_Js")
+@section("another_JS")
 <script src="{{asset('js/datatable/jquery-3.5.1.js')}}"></script>
 <script src="{{asset('js/datatable/jquery.dataTables.min.js')}}"></script>
 <script src="{{asset('js/datatable/dataTables.bootstrap4.min.js')}}"></script>

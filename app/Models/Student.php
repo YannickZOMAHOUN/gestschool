@@ -28,9 +28,5 @@ class Student extends Model
     {
         return $this->hasMany(Recording::class);
     }
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
+ 
 }

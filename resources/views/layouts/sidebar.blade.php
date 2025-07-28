@@ -23,7 +23,42 @@
         <li class="sidebar-divider">
             <span>Gestion Pédagogique</span>
         </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#users-nav" data-bs-toggle="collapse" href="#">
+                <div class="sidebar-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <span class="sidebar-title">Utiliiateurs</span>
+                <i class="bi bi-chevron-down dropdown-indicator"></i>
+            </a>
+            <ul id="users-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
 
+                <li>
+                    <a href="{{ route('user.create') }}">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Nouvel Utilisateur</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="{{ route('user.index') }}">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Liste des utilisateurs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('teacher-assignments.index') }}">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Enseignants par classe</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('principal-teachers.index') }}">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Professeur Principal</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
         <!-- Les Notes -->
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#notes-nav" data-bs-toggle="collapse" href="#">

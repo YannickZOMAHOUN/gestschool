@@ -68,19 +68,6 @@ class StudentsImport implements ToModel, WithStartRow
                     $this->matriculesImportes[] = $matricule;
                     return $existingStudent;
                 }
-
-                // Créer un compte parent
-                $parent = User::create([
-                    'name' => trim($row[2]) ,
-                    'surname' => trim($row[3]),
-                    'email' => 'parent_' . $matricule . '@lyteb.com',
-                    'password' => Hash::make('parent' . $matricule),
-                    'must_change_password' => false,
-                ]);
-
-                // Assigner le rôle Parent
-                $parent->assignRole('Parent');
-
                 // Créer l'élève
                 $student = Student::create([
                     'matricule' => $matricule,
@@ -91,7 +78,6 @@ class StudentsImport implements ToModel, WithStartRow
                     'birthplace' => trim($row[6]),
                     'number' => $phone,
                     'aptitude' => trim($row[9]),
-                    'user_id' => $parent->id,
                 ]);
 
                 // Enregistrement de la classe

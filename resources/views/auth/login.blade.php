@@ -16,6 +16,7 @@
             --dark-color: #212529;
             --success-color: #4bb543;
             --error-color: #ff3333;
+            --info-color: #4895ef;
         }
 
         * {
@@ -83,6 +84,7 @@
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease;
+            z-index: 1;
         }
 
         .login-container:hover {
@@ -215,6 +217,51 @@
             transform: translateY(0);
         }
 
+        .dashboard-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--info-color), var(--accent-color));
+            color: white;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .dashboard-link i {
+            margin-right: 8px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #ccc;
+            font-size: 0.8rem;
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #eee;
+        }
+
+        .divider::before {
+            margin-right: 10px;
+        }
+
+        .divider::after {
+            margin-left: 10px;
+        }
+
         @media (max-width: 480px) {
             .login-container {
                 padding: 30px 20px;
@@ -273,6 +320,12 @@
             </div>
 
             <button type="submit" class="login-btn">Se connecter</button>
+
+            <div class="divider">OU</div>
+
+            <a href="{{ route('parents.dashboard') }}" class="dashboard-link">
+                <i class="fas fa-chart-line"></i> Consulter un résultat
+            </a>
         </form>
     </div>
 </body>

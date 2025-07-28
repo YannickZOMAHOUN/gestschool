@@ -41,7 +41,7 @@ class NoteController extends Controller
             ->where('classroom_id', $classroomId)
             ->where('year_id', $yearId)
             ->get();
-
+     
         return response()->json($recordings->map(function ($rec) {
             return [
                 'recording_id' => $rec->id,
@@ -53,17 +53,14 @@ class NoteController extends Controller
     }
 
 
-    public function getSubjectsWithRatios($classroomId, $yearId)
-    {
-        $ratios = Ratio::with('subject')
-            ->where('classroom_id', $classroomId)
-            ->where('year_id', $yearId)
-            ->get();
-
-        Log::info('Ratios chargés', ['ratios' => $ratios]);
-
-        return response()->json($ratios);
-    }
+public function getSubjectsWithRatios($classroomId, $yearId)
+{
+    $ratios = Ratio::with('subject')
+        ->where('classroom_id', $classroomId)
+        ->where('year_id', $yearId)
+        ->get();
+    return response()->json($ratios);
+}
 
     public function getExistingNotes(Request $request)
     {
@@ -237,6 +234,7 @@ public function exportcard(Request $request)
     $moyennesS1 = [];
     $moyennesS2 = [];
     $moyennesAnnuelles = [];
+    $subjectMoyennes = []; // Pour rang par matière
 
     foreach ($students as $student) {
         $recording = $student->recordings->first();
@@ -279,6 +277,9 @@ public function exportcard(Request $request)
                 $coef = $coefficients[$subject->id];
                 $semestreData[$sem] += $moy * $coef;
                 $totalCoef[$sem] += $coef;
+
+                // Stocker pour rang par matière
+                $subjectMoyennes[$subject->id][$student->id] = $moy;
             }
         }
 
@@ -294,10 +295,29 @@ public function exportcard(Request $request)
         }
     }
 
-    // Rangs
+    // Rangs globaux
     $rangsS1 = $this->calculerRangs($moyennesS1);
     $rangsS2 = $semester == 2 ? $this->calculerRangs($moyennesS2) : [];
     $rangsAnnuels = $semester == 2 ? $this->calculerRangs($moyennesAnnuelles) : [];
+
+    // Rangs par matière
+    $subjectRanks = [];
+    foreach ($subjectMoyennes as $subjectId => $moys) {
+        arsort($moys);
+        $rank = 1;
+        $prev = null;
+        $count = 0;
+        foreach ($moys as $studentId => $m) {
+            $count++;
+            if ($m === $prev) {
+                $subjectRanks[$subjectId][$studentId] = $rank;
+            } else {
+                $rank = $count;
+                $subjectRanks[$subjectId][$studentId] = $rank;
+                $prev = $m;
+            }
+        }
+    }
 
     $year = Year::findOrFail($yearId);
     $classroom = PromotionClassroom::findOrFail($classroomId);
@@ -306,7 +326,6 @@ public function exportcard(Request $request)
         ? 'dashboard.notes.exports.fiche'
         : 'dashboard.notes.exports.bulletin';
 
-    // Déterminer l'orientation en fonction du type d'export
     $orientation = $exportType === 'fiche_collation' ? 'landscape' : 'portrait';
 
     $pdf = PDF::loadView($view, [
@@ -323,17 +342,18 @@ public function exportcard(Request $request)
         'rangsS1' => $rangsS1,
         'rangsS2' => $rangsS2,
         'rangsAnnuels' => $rangsAnnuels,
-    ])->setPaper('a4', $orientation); // Utilisation de la variable d'orientation
+        'subjectRanks' => $subjectRanks,
+        'dateImpression' => now()->format('d/m/Y H:i'),
+    ])->setPaper('a4', $orientation);
 
     $filename = $exportType === 'fiche_collation'
         ? "fiche_de_collation_{$semester}_{$year->year}_{$classroom->name}.pdf"
         : "bulletin_notes_{$semester}_{$year->year}_{$classroom->name}.pdf";
 
-    return response()->streamDownload(
-        fn() => print($pdf->stream()),
-        $filename,
-        ['Content-Type' => 'application/pdf']
-    );
+    return $pdf->stream($filename, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+    ]);
 }
 private function calculerRangs(array $moyennes): array
 {

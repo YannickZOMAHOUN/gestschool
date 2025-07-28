@@ -37,4 +37,9 @@ class PromotionClassroom extends Model
     {
         return $this->hasMany(Ratio::class, 'classroom_id');
     }
+    public function principalTeacher()
+    {
+        return $this->hasOne(ClassSubjectTeacher::class, 'classroom_id')
+                    ->where('is_principal', true);
+    }
 }

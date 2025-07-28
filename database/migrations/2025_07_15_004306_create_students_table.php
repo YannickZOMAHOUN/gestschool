@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('birthplace');
             $table->string('number');
             $table->string('aptitude');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
