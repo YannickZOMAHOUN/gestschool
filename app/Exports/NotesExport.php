@@ -7,12 +7,12 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class NotesExport implements WithMultipleSheets
 {
-    protected $classroomId;
     protected $yearId;
+    protected $classroomId;
 
     public function __construct($yearId, $classroomId)
     {
-        $this->yearId = $yearId;
+        $this->yearId      = $yearId;
         $this->classroomId = $classroomId;
     }
 
@@ -24,15 +24,12 @@ class NotesExport implements WithMultipleSheets
             ->get();
 
         if ($ratios->isEmpty()) {
-            return [new \App\Exports\MatiereNoteSheetExport($this->classroomId, $this->yearId, null)];
+            // Retourne une feuille vide plutôt que de planter
+            return [new MatiereNoteSheetExport($this->classroomId, $this->yearId, null)];
         }
 
-        $sheets = [];
-
-        foreach ($ratios as $ratio) {
-            $sheets[] = new \App\Exports\MatiereNoteSheetExport($this->classroomId, $this->yearId, $ratio);
-        }
-
-        return $sheets;
+        return $ratios->map(fn($ratio) =>
+            new MatiereNoteSheetExport($this->classroomId, $this->yearId, $ratio)
+        )->all();
     }
 }

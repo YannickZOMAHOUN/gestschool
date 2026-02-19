@@ -212,8 +212,6 @@
                                 <th>Sexe</th>
                                 <th>Date de Naissance</th>
                                 <th>Lieu de Naissance</th>
-                                <th>Numéro</th>
-                                <th>Aptitude EPS</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -387,8 +385,6 @@ $(document).ready(function () {
                                 <td data-label="Sexe">${student.sex === 'M' ? 'Masculin' : 'Féminin'}</td>
                                 <td data-label="Naissance">${formatDate(student.birthday)}</td>
                                 <td data-label="Lieu de naissance">${student.birthplace || 'N/A'}</td>
-                                <td data-label="Lieu de naissance">${student.number}</td>
-                                <td data-label="Lieu de naissance">${student.aptitude}</td>
                                 <td data-label="Actions" class="action-buttons">
                                     <a href="${showUrl}" class="view-btn" title="Voir les notes">
                                         <i class="fas fa-eye"></i>

@@ -3,379 +3,656 @@
 namespace App\Http\Controllers;
 
 use App\Models\Note;
-use App\Models\Year;
-use App\Models\Ratio;
 use App\Models\Recording;
-use Illuminate\Http\Request;
+use App\Models\Ratio;
+use App\Models\SectorYear;
+use App\Models\PromotionSector;
 use App\Models\PromotionClassroom;
-use Illuminate\Support\Facades\DB;
-use App\Exports\NotesExport;
+use App\Models\Student;
 use App\Models\Subject;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Year;
+use App\Exports\NotesExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use PDF;
-
+use Maatwebsite\Excel\Facades\Excel;
 
 class NoteController extends Controller
 {
+    // =========================================================
+    // VUES PRINCIPALES
+    // =========================================================
+
+    /**
+     * Page de saisie des notes
+     * GET /note/create  →  route('note.create')
+     */
     public function create()
     {
-        $years =Year::where('status', true)->get();
+        $years = Year::orderBy('year', 'desc')->get();
         return view('dashboard.notes.create', compact('years'));
     }
 
-     public function index()
+    /**
+     * Page de visualisation des notes
+     * GET /note  →  route('note.index')
+     */
+    public function index(Request $request)
     {
-        $years =Year::where('status', true)->get();
-        return view('dashboard.notes.list', compact('years'));
-    }
-    public function getcards()
-    {
-        $years =Year::where('status', true)->get();
-        return view('dashboard.notes.card', compact('years'));
-    }
+        $years        = Year::orderBy('year', 'desc')->get();
+        $notes        = collect();
+        $subjects     = collect();
+        $classroom    = null;
+        $studentsData = collect();
 
-    public function getStudents($classroomId, $yearId)
-    {
-        $recordings = Recording::with('student')
-            ->where('classroom_id', $classroomId)
-            ->where('year_id', $yearId)
-            ->get();
-     
-        return response()->json($recordings->map(function ($rec) {
-            return [
-                'recording_id' => $rec->id,
-                'name' => $rec->student->name,
-                'surname' => $rec->student->surname,
-                'aptitude' => $rec->student->aptitude,
-            ];
-        }));
-    }
+        // Toujours initialisées pour éviter "Undefined variable" dans la vue
+        $sectorsForFilter    = collect();
+        $promotionsForFilter = collect();
+        $classroomsForFilter = collect();
 
+        if ($request->filled('year_id')) {
+            $sectorsForFilter = SectorYear::with('sector')
+                ->where('year_id', $request->year_id)
+                ->get()
+                ->pluck('sector')
+                ->filter();
+        }
 
-public function getSubjectsWithRatios($classroomId, $yearId)
-{
-    $ratios = Ratio::with('subject')
-        ->where('classroom_id', $classroomId)
-        ->where('year_id', $yearId)
-        ->get();
-    return response()->json($ratios);
-}
+        if ($request->filled(['year_id', 'sector_id'])) {
+            $sectorYear = SectorYear::where('year_id', $request->year_id)
+                ->where('sector_id', $request->sector_id)
+                ->first();
+            $promotionsForFilter = $sectorYear
+                ? PromotionSector::where('sector_year_id', $sectorYear->id)->get()
+                : collect();
+        }
 
-    public function getExistingNotes(Request $request)
-    {
-        $notes = Note::where('semester', $request->semester)
-            ->where('ratio_id', $request->ratio_id)
-            ->where('subject_id', $request->subject_id)
-            ->whereIn('recording_id', $request->recording_ids)
-            ->get();
+        if ($request->filled('promotion_id')) {
+            $classroomsForFilter = PromotionClassroom::where('promotion_sector_id', $request->promotion_id)->get();
+        }
 
-        $type = $request->type;
+        if ($request->filled(['year_id', 'sector_id', 'promotion_id', 'classroom_id', 'semester'])) {
 
-        return $notes->mapWithKeys(function ($note) use ($type) {
-            return [$note->recording_id => $type === 'devoir1' ? $note->devoir1 : ($type === 'devoir2' ? $note->devoir2 : null)];
-        });
-    }
+            $classroom = PromotionClassroom::with([
+                'promotionSector.sectorYear.sector',
+                'promotionSector.sectorYear.year',
+            ])->find($request->classroom_id);
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'year_id' => 'required|exists:years,id',
-            'classroom_id' => 'required|exists:promotion_classrooms,id',
-            'subject' => 'required|exists:ratios,id',
-            'semester' => 'required|in:1,2',
-            'type' => 'required|in:interro,devoir1,devoir2',
-            'students' => 'required|array',
-            'grades' => 'required|array',
-            'students.*' => 'required|exists:recordings,id',
-            'grades.*' => 'nullable|numeric|min:0|max:20'
-        ]);
+            if ($classroom) {
+                $rawNotes = Note::with(['recording.student', 'subject', 'ratio'])
+                    ->whereHas('recording', function ($q) use ($request) {
+                        $q->where('classroom_id', $request->classroom_id)
+                          ->where('year_id', $request->year_id);
+                    })
+                    ->where('semester', $request->semester)
+                    ->get();
 
-        try {
-            DB::beginTransaction();
-            $ratio = Ratio::with('subject')->findOrFail($request->subject);
-            foreach ($request->students as $index => $recordingId) {
-                $noteValue = $request->grades[$index];
-
-                if (is_null($noteValue) || $noteValue === '') continue;
-
-                $note = Note::firstOrNew([
-                    'recording_id' => $recordingId,
-                    'subject_id' => $ratio->subject_id,
-                    'ratio_id' => $ratio->id,
-                    'semester' => $request->semester,
-                ]);
-
-                if ($request->type === 'interro') {
-                    $interros = is_array($note->interros) ? $note->interros : [];
-                    if (count($interros) < 5) {
-                        $interros[] = round($noteValue, 2);
-                        $note->interros = $interros;
+                foreach ($rawNotes as $note) {
+                    if (!$subjects->has($note->subject_id)) {
+                        $subjects->put($note->subject_id, [
+                            'name'        => $note->subject->name,
+                            'coefficient' => $note->ratio->coefficient,
+                        ]);
                     }
-                } elseif ($request->type === 'devoir1') {
-                    $note->devoir1 = round($noteValue, 2);
-                } elseif ($request->type === 'devoir2') {
-                    $note->devoir2 = round($noteValue, 2);
+                }
+                $subjects = $subjects->sortBy('name');
+
+                $notes = $rawNotes->groupBy('recording_id');
+
+                foreach ($notes as $recordingId => $studentNotes) {
+                    $totalMoyPonderee = 0;
+                    $totalCoef        = 0;
+                    $notesParMatiere  = [];
+
+                    foreach ($subjects as $subjectId => $subjectInfo) {
+                        $note        = $studentNotes->where('subject_id', $subjectId)->first();
+                        $moyInterros = null;
+                        $moy20       = null;
+
+                        if ($note) {
+                            $interros = is_array($note->interros)
+                                ? $note->interros
+                                : (json_decode($note->interros, true) ?? []);
+
+                            $moyInterros = count($interros) > 0
+                                ? round(array_sum($interros) / count($interros), 2)
+                                : null;
+
+                            $moy20 = $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2);
+
+                            if ($moy20 !== null) {
+                                $totalMoyPonderee += $moy20 * $subjectInfo['coefficient'];
+                                $totalCoef        += $subjectInfo['coefficient'];
+                            }
+                        }
+
+                        $notesParMatiere[$subjectId] = [
+                            'note'         => $note,
+                            'moy_interros' => $moyInterros,
+                            'moy_20'       => $moy20,
+                        ];
+                    }
+
+                    $moyenneGenerale = $totalCoef > 0
+                        ? round($totalMoyPonderee / $totalCoef, 2)
+                        : null;
+
+                    $recording = $studentNotes->first()->recording;
+
+                    $studentsData->push([
+                        'student'           => $recording->student,
+                        'notes_par_matiere' => $notesParMatiere,
+                        'moyenne_generale'  => $moyenneGenerale,
+                    ]);
                 }
 
-                $note->save();
+                $studentsData = $studentsData->sortBy(fn($s) => $s['student']->name)->values();
             }
-
-            DB::commit();
-            return response()->json(['success' => true, 'message' => 'Les notes ont été enregistrées avec succès.']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+
+        return view('dashboard.notes.list', compact(
+            'years', 'notes', 'subjects', 'classroom', 'studentsData',
+            'sectorsForFilter', 'promotionsForFilter', 'classroomsForFilter'
+        ));
     }
 
-    public function export(Request $request)
+    /**
+     * Afficher les notes d'un étudiant spécifique
+     * GET /note/{student}  →  route('note.show')
+     */
+    public function show($studentId)
     {
-        $request->validate([
-            'year_id' => 'required|exists:years,id',
-            'classroom_id' => 'required|exists:promotion_classrooms,id',
-            'semester' => 'required|in:1,2',
-        ]);
+        $student = Student::with([
+            'recordings.notes.subject',
+            'recordings.notes.ratio',
+        ])->findOrFail($studentId);
 
-        try {
-            // Récupération du nom de la classe
-            $classroom = PromotionClassroom::findOrFail($request->classroom_id);
-            $className = str_replace(' ', '_', $classroom->name); // Optionnel : remplace les espaces par des underscores
-
-            // Génération du nom de fichier
-            $filename = "Notes_Classe_{$className}_Semestre{$request->semester}.xlsx";
-
-            return Excel::download(
-                new NotesExport($request->year_id, $request->classroom_id, $request->semester),
-                $filename
-            );
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erreur lors de l\'export : ' . $e->getMessage());
-        }
+        return view('dashboard.notes.show', compact('student'));
     }
 
+    // =========================================================
+    // EXPORT EXCEL
+    // =========================================================
+
+    /**
+     * Page de sélection pour l'export Excel
+     * GET /notes/export  →  route('export_view')
+     */
     public function export_view()
     {
-        $years = Year::where('status', true)->get();
+        $years = Year::orderBy('year', 'desc')->get();
         return view('dashboard.notes.export', compact('years'));
     }
 
- public function byClassAndSemester($classroom_id, $year_id, $semester)
-{
-    $students = Recording::with(['student', 'notes' => function ($q) use ($semester) {
-        $q->where('semester', $semester)->with('subject');
-    }])->where('classroom_id', $classroom_id)
-      ->where('year_id', $year_id)
-      ->get();
+    /**
+     * Téléchargement du fichier Excel
+     * GET /notes/export/download  →  route('notes.export')
+     */
+    public function export(Request $request)
+    {
+        $request->validate([
+            'year_id'      => 'required|integer|exists:years,id',
+            'classroom_id' => 'required|integer|exists:promotion_classrooms,id',
+            'semester'     => 'required|integer|in:1,2',
+        ]);
 
-    return $students->map(function ($rec) {
-        return [
-            'id' => $rec->id,
-            'name' => $rec->student->name,
-            'surname' => $rec->student->surname,
-            'matricule' => $rec->student->matricule,
-            'notes' => $rec->notes->map(function ($note) {
-                return [
-                    'id' => $note->id,
-                    'subject' => $note->subject->name,
-                    'interros' => $note->interros ?? [],
-                    'devoir1' => $note->devoir1,
-                    'devoir2' => $note->devoir2,
-                ];
-            }),
-        ];
-    });
-}
+        $classroom = PromotionClassroom::findOrFail($request->classroom_id);
+        $year      = Year::findOrFail($request->year_id);
 
-public function update(Request $request, Note $note)
-{
-    $note->update([
-        'interros' => $request->input('interros'),
-        'devoir1' => $request->input('devoir1'),
-        'devoir2' => $request->input('devoir2'),
-    ]);
-    return response()->json(['message' => 'Note mise à jour avec succès']);
-}
-public function exportcard(Request $request)
-{
-    $request->validate([
-        'year_id' => 'required|exists:years,id',
-        'classroom_id' => 'required|exists:promotion_classrooms,id',
-        'semester' => 'required|in:1,2',
-        'export_type' => 'required|in:fiche_collation,fiche_bulletin',
-    ]);
+        $filename = 'notes_' . $year->year . '_' . $classroom->name . '_S' . $request->semester . '.xlsx';
 
-    $yearId = $request->year_id;
-    $classroomId = $request->classroom_id;
-    $semester = $request->semester;
-    $exportType = $request->export_type;
-
-    $recordings = Recording::with('student')
-        ->where('classroom_id', $classroomId)
-        ->where('year_id', $yearId)
-        ->get();
-
-    $students = $recordings->pluck('student')->filter();
-    $subjects = Subject::whereHas('ratios', fn($q) =>
-        $q->where('classroom_id', $classroomId)->where('year_id', $yearId)
-    )->orderBy('name')->get();
-
-    $coefficients = [];
-    foreach ($subjects as $subject) {
-        $coef = Ratio::where([
-            'subject_id' => $subject->id,
-            'classroom_id' => $classroomId,
-            'year_id' => $yearId,
-        ])->value('coefficient') ?? 1;
-        $coefficients[$subject->id] = $coef;
+        return Excel::download(
+            new NotesExport($request->year_id, $request->classroom_id),
+            $filename
+        );
     }
 
-    $notesData = [];
-    $moyennesS1 = [];
-    $moyennesS2 = [];
-    $moyennesAnnuelles = [];
-    $subjectMoyennes = []; // Pour rang par matière
+    // =========================================================
+    // EXPORT PDF — FICHES & BULLETINS
+    // =========================================================
 
-    foreach ($students as $student) {
-        $recording = $student->recordings->first();
-        if (!$recording) continue;
+    /**
+     * Page de sélection pour les exports PDF (fiches + bulletins)
+     * GET /bulletins  →  route('get.cards')
+     */
+    public function getcards(Request $request)
+    {
+        $years = Year::orderBy('year', 'desc')->get();
+        return view('dashboard.notes.cards', compact('years'));
+    }
 
-        $semestreData = [1 => 0, 2 => 0];
-        $totalCoef = [1 => 0, 2 => 0];
+    /**
+     * Génère le PDF (fiche de collation OU bulletins) selon export_type
+     * GET /notes/export/fiche  →  route('notes.exportcard')
+     */
+    public function exportcard(Request $request)
+    {
+        $request->validate([
+            'year_id'      => 'required|integer|exists:years,id',
+            'classroom_id' => 'required|integer|exists:promotion_classrooms,id',
+            'semester'     => 'required|integer|in:1,2',
+            'export_type'  => 'required|in:fiche_collation,fiche_bulletin',
+        ]);
 
-        foreach ([1, 2] as $sem) {
+        $year      = Year::findOrFail($request->year_id);
+        $classroom = PromotionClassroom::with('promotionSector.sectorYear')->findOrFail($request->classroom_id);
+        $semester  = (int) $request->semester;
+
+        // ── Récupérer les matières (subjects) de cette classe ─────────────
+        $ratios = Ratio::with('subject')
+            ->where('year_id', $request->year_id)
+            ->where('classroom_id', $request->classroom_id)
+            ->get();
+
+        $subjects     = $ratios->pluck('subject')->unique('id')->sortBy('name')->values();
+        $coefficients = $ratios->pluck('coefficient', 'subject_id');   // [subject_id => coef]
+
+        // ── Récupérer les étudiants inscrits ──────────────────────────────
+        $recordings = Recording::with('student')
+            ->where('year_id', $request->year_id)
+            ->where('classroom_id', $request->classroom_id)
+            ->get();
+
+        $students = $recordings->pluck('student')->sortBy('name')->values();
+
+        // ── Construire notesData[student_id][semester][subject_id] = moy20 ─
+        $notesData = [];
+
+        foreach ($recordings as $recording) {
+            $sid = $recording->student_id;
+
             foreach ($subjects as $subject) {
-                if (strtoupper($subject->name) === 'EPS' && $student->aptitude !== 'Apte') {
-                    $notesData[$student->id][$sem][$subject->id] = 'Dispensé(e)';
-                    continue;
+                $note = Note::where('recording_id', $recording->id)
+                    ->where('subject_id', $subject->id)
+                    ->where('semester', $semester)
+                    ->first();
+
+                if ($note && $note->aptitude === 'dispensé') {
+                    $notesData[$sid][$semester][$subject->id] = 'Dispensé(e)';
+                } else {
+                    $interros = $note
+                        ? (is_array($note->interros) ? $note->interros : (json_decode($note->interros, true) ?? []))
+                        : [];
+                    $moy20 = $note
+                        ? $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2)
+                        : null;
+                    $notesData[$sid][$semester][$subject->id] = $moy20;
+                }
+            }
+        }
+
+        // ── Calculer les moyennes générales pondérées par semestre ─────────
+        $moyennesS1 = [];
+        $moyennesS2 = [];
+
+        foreach ($recordings as $recording) {
+            $sid = $recording->student_id;
+
+            foreach ([1, 2] as $sem) {
+                $totalPond = 0;
+                $totalCoef = 0;
+
+                foreach ($subjects as $subject) {
+                    $note = Note::where('recording_id', $recording->id)
+                        ->where('subject_id', $subject->id)
+                        ->where('semester', $sem)
+                        ->first();
+
+                    if ($note) {
+                        $interros = is_array($note->interros)
+                            ? $note->interros
+                            : (json_decode($note->interros, true) ?? []);
+                        $moy = $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2);
+                        if ($moy !== null) {
+                            $coef = $coefficients[$subject->id] ?? 1;
+                            $totalPond += $moy * $coef;
+                            $totalCoef += $coef;
+                        }
+                    }
                 }
 
-                $note = Note::where([
-                    'recording_id' => $recording->id,
-                    'subject_id' => $subject->id,
-                    'semester' => $sem,
-                ])->first();
-
-                $interros = $note?->interros ?? [];
-                $nb = count($interros);
-                $moyInterros = $nb > 0 ? array_sum($interros) / $nb : null;
-
-                $d1 = $note?->devoir1;
-                $d2 = $note?->devoir2;
-
-                $moyenne = match (true) {
-                    $moyInterros === null && $d1 && $d2 => ($d1 + $d2) / 2,
-                    $moyInterros === null && $d1 => $d1,
-                    $moyInterros === null && $d2 => $d2,
-                    $moyInterros === null => 0,
-                    default => collect([$moyInterros, $d1, $d2])->filter()->avg(),
-                };
-
-                $moy = round($moyenne, 2);
-                $notesData[$student->id][$sem][$subject->id] = $moy;
-
-                $coef = $coefficients[$subject->id];
-                $semestreData[$sem] += $moy * $coef;
-                $totalCoef[$sem] += $coef;
-
-                // Stocker pour rang par matière
-                $subjectMoyennes[$subject->id][$student->id] = $moy;
+                $moy = $totalCoef > 0 ? round($totalPond / $totalCoef, 2) : null;
+                if ($sem === 1) $moyennesS1[$sid] = $moy;
+                else           $moyennesS2[$sid] = $moy;
             }
         }
 
-        $m1 = $totalCoef[1] ? round($semestreData[1] / $totalCoef[1], 2) : 0;
-        $m2 = $totalCoef[2] ? round($semestreData[2] / $totalCoef[2], 2) : 0;
+        // ── Moyennes annuelles ────────────────────────────────────────────
+        $moyennesAnnuelles = [];
+        foreach ($students as $student) {
+            $sid = $student->id;
+            $m1  = $moyennesS1[$sid] ?? null;
+            $m2  = $moyennesS2[$sid] ?? null;
+            $moyennesAnnuelles[$sid] = ($m1 !== null && $m2 !== null)
+                ? round(($m1 + $m2) / 2, 2)
+                : ($m1 ?? $m2);
+        }
 
-        if ($semester == 1) {
-            $moyennesS1[$student->id] = $m1;
-        } else {
-            $moyennesS1[$student->id] = $m1;
-            $moyennesS2[$student->id] = $m2;
-            $moyennesAnnuelles[$student->id] = round(($m1 + $m2) / 2, 2);
+        // ── Calcul des rangs ──────────────────────────────────────────────
+        $rangsS1 = $this->calculerRangs($moyennesS1);
+        $rangsS2 = $this->calculerRangs($moyennesS2);
+        $rangsAnnuels = $this->calculerRangs($moyennesAnnuelles);
+
+        // ── Rangs par matière (pour les bulletins) ────────────────────────
+        $subjectRanks = [];
+        foreach ($subjects as $subject) {
+            $moysParSubject = [];
+            foreach ($recordings as $recording) {
+                $note = Note::where('recording_id', $recording->id)
+                    ->where('subject_id', $subject->id)
+                    ->where('semester', $semester)
+                    ->first();
+                if ($note) {
+                    $interros = is_array($note->interros)
+                        ? $note->interros
+                        : (json_decode($note->interros, true) ?? []);
+                    $moy = $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2);
+                    if ($moy !== null) $moysParSubject[$recording->student_id] = $moy;
+                }
+            }
+            $subjectRanks[$subject->id] = $this->calculerRangs($moysParSubject);
+        }
+
+        $data = compact(
+            'year', 'classroom', 'semester', 'students', 'subjects',
+            'coefficients', 'notesData', 'moyennesS1', 'moyennesS2',
+            'moyennesAnnuelles', 'rangsS1', 'rangsS2', 'rangsAnnuels',
+            'subjectRanks'
+        );
+        $data['dateImpression'] = Carbon::now()->format('d/m/Y');
+
+        if ($request->export_type === 'fiche_collation') {
+            $pdf = Pdf::loadView('dashboard.notes.pdf.fiche_collation', $data)
+                ->setPaper('a3', 'landscape');
+            return $pdf->download("fiche_collation_{$classroom->name}_S{$semester}.pdf");
+        }
+
+        // fiche_bulletin
+        $pdf = Pdf::loadView('dashboard.notes.pdf.bulletin', $data)
+            ->setPaper('a4', 'portrait');
+        return $pdf->download("bulletins_{$classroom->name}_S{$semester}.pdf");
+    }
+
+    /**
+     * Page de consultation des notes d'un étudiant
+     * GET /notes/fetch  →  route('get.student.notes')
+     */
+    public function getStudentNotes(Request $request)
+    {
+        $years = Year::orderBy('year', 'desc')->get();
+        return view('dashboard.notes.student_notes', compact('years'));
+    }
+
+    // =========================================================
+    // API — Dropdowns hiérarchiques
+    // =========================================================
+
+    public function getSectorsByYear($yearId)
+    {
+        $sectors = SectorYear::with('sector')
+            ->where('year_id', $yearId)
+            ->get()
+            ->map(fn($sy) => [
+                'id'   => $sy->sector->id,
+                'name' => $sy->sector->name_sector,
+            ]);
+
+        return response()->json($sectors);
+    }
+
+    public function getPromotionsByYearSector($yearId, $sectorId)
+    {
+        $sectorYear = SectorYear::where('year_id', $yearId)
+            ->where('sector_id', $sectorId)
+            ->first();
+
+        if (!$sectorYear) return response()->json([]);
+
+        $promotions = PromotionSector::where('sector_year_id', $sectorYear->id)
+            ->get()
+            ->map(fn($p) => [
+                'id'   => $p->id,
+                'name' => $p->promotion_sector,
+            ]);
+
+        return response()->json($promotions);
+    }
+
+    public function getClassesByPromotion($promotionId)
+    {
+        $classrooms = PromotionClassroom::where('promotion_sector_id', $promotionId)
+            ->get()
+            ->map(fn($c) => [
+                'id'   => $c->id,
+                'name' => $c->name,
+            ]);
+
+        return response()->json($classrooms);
+    }
+
+    // =========================================================
+    // API — Matières + ratios pour une classe
+    // =========================================================
+
+    /**
+     * POST /api/subjects-by-classroom
+     */
+    public function getSubjectsByClassroom(Request $request)
+    {
+        $request->validate([
+            'classroom_id' => 'required|integer|exists:promotion_classrooms,id',
+            'year_id'      => 'required|integer|exists:years,id',
+        ]);
+
+        $classroom = PromotionClassroom::findOrFail($request->classroom_id);
+
+        $ratios = Ratio::with('subject')
+            ->where('year_id', $request->year_id)
+            ->where('promotion_sector_id', $classroom->promotion_sector_id)
+            ->where('classroom_id', $request->classroom_id)
+            ->get()
+            ->map(fn($r) => [
+                'ratio_id'     => $r->id,
+                'subject_id'   => $r->subject_id,
+                'subject_name' => $r->subject->name,
+                'coefficient'  => $r->coefficient,
+            ]);
+
+        if ($ratios->isEmpty()) {
+            return response()->json([
+                'success'  => false,
+                'message'  => 'Aucune matière trouvée pour cette classe.',
+                'subjects' => [],
+            ]);
+        }
+
+        return response()->json(['success' => true, 'subjects' => $ratios]);
+    }
+
+    // =========================================================
+    // API — Étudiants avec leurs notes existantes
+    // =========================================================
+
+    /**
+     * POST /api/students-with-notes
+     */
+    public function getStudentsWithNotes(Request $request)
+    {
+        $request->validate([
+            'year_id'      => 'required|integer|exists:years,id',
+            'classroom_id' => 'required|integer|exists:promotion_classrooms,id',
+            'ratio_id'     => 'required|integer|exists:ratios,id',
+            'semester'     => 'required|integer|in:1,2',
+        ]);
+
+        $ratio = Ratio::findOrFail($request->ratio_id);
+
+        $recordings = Recording::with('student')
+            ->where('year_id', $request->year_id)
+            ->where('classroom_id', $request->classroom_id)
+            ->get();
+
+        if ($recordings->isEmpty()) {
+            return response()->json([
+                'success'  => false,
+                'message'  => 'Aucun étudiant inscrit dans cette classe.',
+                'students' => [],
+            ]);
+        }
+
+        $students = $recordings->map(function ($recording) use ($request, $ratio) {
+            $note = Note::where('recording_id', $recording->id)
+                ->where('subject_id', $ratio->subject_id)
+                ->where('ratio_id', $request->ratio_id)
+                ->where('semester', $request->semester)
+                ->first();
+
+            $interros    = $note
+                ? (is_array($note->interros) ? $note->interros : (json_decode($note->interros, true) ?? []))
+                : [];
+            $devoir1     = $note?->devoir1;
+            $devoir2     = $note?->devoir2;
+            $moyInterros = count($interros) > 0 ? round(array_sum($interros) / count($interros), 2) : 0;
+            $moy20       = $this->calculateMoyenne20($interros, $devoir1, $devoir2);
+
+            return [
+                'id'           => $recording->student->id,
+                'recording_id' => $recording->id,
+                'name'         => $recording->student->name,
+                'surname'      => $recording->student->surname,
+                'is_disabled'  => $recording->student->aptitude === 'dispensé',
+                'interros'     => $interros,
+                'devoir1'      => $devoir1,
+                'devoir2'      => $devoir2,
+                'moy_interros' => $moyInterros,
+                'moy_20'       => $moy20,
+            ];
+        })->sortBy('name')->values();
+
+        return response()->json(['success' => true, 'students' => $students]);
+    }
+
+    // =========================================================
+    // API — Sauvegarde groupée des notes
+    // =========================================================
+
+    /**
+     * POST /api/notes/bulk
+     */
+    public function storeBulk(Request $request)
+    {
+        $request->validate([
+            'year_id'              => 'required|integer|exists:years,id',
+            'classroom_id'         => 'required|integer|exists:promotion_classrooms,id',
+            'ratio_id'             => 'required|integer|exists:ratios,id',
+            'semester'             => 'required|integer|in:1,2',
+            'notes'                => 'required|array|min:1',
+            'notes.*.recording_id' => 'required|integer|exists:recordings,id',
+            'notes.*.interros'     => 'nullable|array',
+            'notes.*.interros.*'   => 'nullable|numeric|min:0|max:20',
+            'notes.*.devoir1'      => 'nullable|numeric|min:0|max:20',
+            'notes.*.devoir2'      => 'nullable|numeric|min:0|max:20',
+        ]);
+
+        $ratio = Ratio::findOrFail($request->ratio_id);
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->notes as $noteData) {
+                $interros = array_values(array_filter(
+                    $noteData['interros'] ?? [],
+                    fn($v) => $v !== null && $v !== ''
+                ));
+
+                Note::updateOrCreate(
+                    [
+                        'recording_id' => $noteData['recording_id'],
+                        'subject_id'   => $ratio->subject_id,
+                        'ratio_id'     => $request->ratio_id,
+                        'semester'     => $request->semester,
+                    ],
+                    [
+                        'interros' => count($interros) > 0 ? $interros : null,
+                        'devoir1'  => isset($noteData['devoir1']) && $noteData['devoir1'] !== '' ? $noteData['devoir1'] : null,
+                        'devoir2'  => isset($noteData['devoir2']) && $noteData['devoir2'] !== '' ? $noteData['devoir2'] : null,
+                    ]
+                );
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => count($request->notes) . ' note(s) enregistrée(s) avec succès.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur storeBulk notes : ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'enregistrement : ' . $e->getMessage(),
+            ], 500);
         }
     }
 
-    // Rangs globaux
-    $rangsS1 = $this->calculerRangs($moyennesS1);
-    $rangsS2 = $semester == 2 ? $this->calculerRangs($moyennesS2) : [];
-    $rangsAnnuels = $semester == 2 ? $this->calculerRangs($moyennesAnnuelles) : [];
+    // =========================================================
+    // Helpers
+    // =========================================================
 
-    // Rangs par matière
-    $subjectRanks = [];
-    foreach ($subjectMoyennes as $subjectId => $moys) {
-        arsort($moys);
-        $rank = 1;
-        $prev = null;
-        $count = 0;
-        foreach ($moys as $studentId => $m) {
-            $count++;
-            if ($m === $prev) {
-                $subjectRanks[$subjectId][$studentId] = $rank;
+    /**
+     * Formule : (Moy_interros + D1 + D2) / nb_composantes_présentes
+     */
+    public function calculateMoyenne20(array $interros, $devoir1, $devoir2): ?float
+    {
+        $moyInterros = count($interros) > 0
+            ? array_sum($interros) / count($interros)
+            : null;
+
+        $d1 = ($devoir1 !== null && $devoir1 !== '') ? floatval($devoir1) : null;
+        $d2 = ($devoir2 !== null && $devoir2 !== '') ? floatval($devoir2) : null;
+
+        $composantes = [];
+        if ($moyInterros !== null) $composantes[] = $moyInterros;
+        if ($d1          !== null) $composantes[] = $d1;
+        if ($d2          !== null) $composantes[] = $d2;
+
+        if (count($composantes) === 0) return null;
+
+        return round(array_sum($composantes) / count($composantes), 2);
+    }
+
+    /**
+     * Calcule les rangs à partir d'un tableau [student_id => moyenne]
+     * Retourne [student_id => rang] — ex-æquo partagent le même rang
+     */
+    private function calculerRangs(array $moyennes): array
+    {
+        arsort($moyennes);
+        $rangs = [];
+        $rang  = 1;
+        $prev  = null;
+        $tie   = 0;
+
+        foreach ($moyennes as $sid => $moy) {
+            if ($moy === null) {
+                $rangs[$sid] = '-';
+                continue;
+            }
+            if ($moy === $prev) {
+                $rangs[$sid] = $rang - $tie - 1;
+                $tie++;
             } else {
-                $rank = $count;
-                $subjectRanks[$subjectId][$studentId] = $rank;
-                $prev = $m;
+                $rang += $tie;
+                $tie  = 0;
+                $rangs[$sid] = $rang;
+                $prev  = $moy;
             }
+            $rang++;
         }
+
+        return $rangs;
     }
-
-    $year = Year::findOrFail($yearId);
-    $classroom = PromotionClassroom::findOrFail($classroomId);
-
-    $view = $exportType === 'fiche_collation'
-        ? 'dashboard.notes.exports.fiche'
-        : 'dashboard.notes.exports.bulletin';
-
-    $orientation = $exportType === 'fiche_collation' ? 'landscape' : 'portrait';
-
-    $pdf = PDF::loadView($view, [
-        'year' => $year,
-        'classroom' => $classroom,
-        'students' => $students,
-        'subjects' => $subjects,
-        'coefficients' => $coefficients,
-        'notesData' => $notesData,
-        'semester' => $semester,
-        'moyennesS1' => $moyennesS1,
-        'moyennesS2' => $moyennesS2,
-        'moyennesAnnuelles' => $moyennesAnnuelles,
-        'rangsS1' => $rangsS1,
-        'rangsS2' => $rangsS2,
-        'rangsAnnuels' => $rangsAnnuels,
-        'subjectRanks' => $subjectRanks,
-        'dateImpression' => now()->format('d/m/Y H:i'),
-    ])->setPaper('a4', $orientation);
-
-    $filename = $exportType === 'fiche_collation'
-        ? "fiche_de_collation_{$semester}_{$year->year}_{$classroom->name}.pdf"
-        : "bulletin_notes_{$semester}_{$year->year}_{$classroom->name}.pdf";
-
-    return $pdf->stream($filename, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="' . $filename . '"',
-    ]);
 }
-private function calculerRangs(array $moyennes): array
-{
-    arsort($moyennes);
-    $rangs = [];
-    $rang = 1;
-    $prevMoy = null;
-    $count = 0;
-
-    foreach ($moyennes as $id => $moy) {
-        $count++;
-        if ($moy === $prevMoy) {
-            $rangs[$id] = $rang;
-        } else {
-            $rang = $count;
-            $rangs[$id] = $rang;
-            $prevMoy = $moy;
-        }
-    }
-
-    return $rangs;
-}
-
-}
-

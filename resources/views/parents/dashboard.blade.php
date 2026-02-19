@@ -336,8 +336,8 @@
                                 <p class="mb-2"><i class="fas fa-id-card me-2 text-primary"></i><strong>Matricule :</strong> {{ $student->matricule }}</p>
                             </div>
                             <div class="col-md-6">
-                                <p class="mb-2"><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Année :</strong> {{ $request->year_id }}</p>
-                                <p class="mb-2"><i class="fas fa-users-class me-2 text-primary"></i><strong>Classe :</strong> {{ $request->classroom_id }}</p>
+                                <p class="mb-2"><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Année :</strong> {{ $year->year ?? 'Non spécifié' }}</p>
+                                <p class="mb-2"><i class="fas fa-users me-2 text-primary"></i><strong>Classe :</strong> {{ $classroom->name ?? 'Non spécifié' }}</p>
                             </div>
                         </div>
 
@@ -349,6 +349,8 @@
                                         <th class="text-center">Coef</th>
                                         <th>Interros</th>
                                         <th class="text-center">Moy. Interros</th>
+                                        <th class="text-center">Devoir 1</th>
+                                        <th class="text-center">Devoir 2</th>
                                         <th class="text-center">Moyenne/20</th>
                                         <th class="text-center">Moy. Coef</th>
                                     </tr>
@@ -370,6 +372,8 @@
                                             @endif
                                         </td>
                                         <td class="text-center">{{ number_format($result['interros_average'], 2) }}</td>
+                                        <td class="text-center">{{ number_format($result['devoir1']) }}</td>
+                                        <td class="text-center">{{ number_format($result['devoir2']) }}</td>
                                         <td class="text-center fw-bold">{{ number_format($result['subject_average'], 2) }}</td>
                                         <td class="text-center">{{ number_format($result['weighted_average'], 2) }}</td>
                                     </tr>
@@ -395,13 +399,14 @@
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
-                            <div class="alert alert-light mb-0">
-                                <i class="fas fa-info-circle me-2 text-primary"></i>
-                            </div>
-                            <button class="btn btn-print no-print" onclick="window.print()">
-                                <i class="fas fa-print me-2"></i>Imprimer
-                            </button>
-                        </div>
+    <div class="alert alert-light mb-0">
+        <i class="fas fa-info-circle me-2 text-primary"></i>
+        <small>La moyenne générale est calculée en tenant compte des coefficients de chaque matière.</small>
+    </div>
+    <button class="btn btn-print no-print" onclick="exportPdf()">
+        <i class="fas fa-file-pdf me-2"></i>Exporter PDF
+    </button>
+</div>
                     </div>
                 </div>
                 @endif
@@ -556,6 +561,47 @@
             }, 300);
             @endif
         });
+        function exportPdf() {
+    // Afficher un indicateur de chargement
+    const btn = document.querySelector('.btn-print');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Génération du PDF...';
+    btn.disabled = true;
+
+    // Récupérer les paramètres de recherche
+    const formData = new FormData(document.querySelector('form'));
+    const params = new URLSearchParams();
+
+    for (const [key, value] of formData.entries()) {
+        params.append(key, value);
+    }
+
+    // Faire la requête pour générer le PDF
+    fetch(`/parents/export-pdf?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur lors de la génération');
+            return response.blob();
+        })
+        .then(blob => {
+            // Créer un lien pour télécharger le PDF
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resultats-${formData.get('matricule')}-semestre-${formData.get('semester')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue lors de la génération du PDF');
+        })
+        .finally(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        });
+}
     </script>
 </body>
 </html>

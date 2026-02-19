@@ -1,44 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Fiche à Collationner - Semestre {{ $semester }}</title>
+    <title>Fiche à Collationner — Semestre {{ $semester }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h2 { margin: 0; font-size: 18px; }
-        .header p { margin: 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #000; padding: 5px; text-align: center; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .student-name { text-align: left; }
-        .footer { margin-top: 20px; font-size: 11px; }
-        .signature { display: inline-block; width: 200px; border-top: 1px solid #000; margin-top: 50px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; margin: 0; padding: 10px; }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h2 { margin: 0; font-size: 16px; }
+        .header p  { margin: 4px 0; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border: 1px solid #000; padding: 4px 5px; text-align: center; }
+        th { background-color: #d9e1f2; font-weight: bold; font-size: 10px; }
+        td.student-name { text-align: left; white-space: nowrap; }
+        .footer { margin-top: 20px; font-size: 10px; }
+        .signature { display: inline-block; width: 200px; border-top: 1px solid #000; margin-top: 50px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="header">
         <h2>ÉTABLISSEMENT SCOLAIRE</h2>
-        <p>Fiche à Collationner - SEMESTRE {{ $semester }}</p>
-        <p>Année scolaire: {{ $year->year }} | Classe: {{ $classroom->name }}</p>
+        <p><strong>Fiche à Collationner — SEMESTRE {{ $semester }}</strong></p>
+        <p>Année scolaire : {{ $year->year }} &nbsp;|&nbsp; Classe : {{ $classroom->name }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th rowspan="2">Élèves</th>
+                <th rowspan="2" style="min-width:120px;">Élèves</th>
+
                 @foreach($subjects as $subject)
                     <th colspan="2">{{ $subject->name }}</th>
                 @endforeach
-                @if ($semester == 1)
+
+                @if($semester == 1)
                     <th rowspan="2">Moy. Gén.</th>
                     <th rowspan="2">Rang</th>
                 @else
                     <th rowspan="2">Moy. S1</th>
                     <th rowspan="2">Moy. S2</th>
-                    <th rowspan="2">Moy. Annuelle</th>
+                    <th rowspan="2">Moy. Ann.</th>
                     <th rowspan="2">Rang S2</th>
-                    <th rowspan="2">Rang Annuel</th>
+                    <th rowspan="2">Rang Ann.</th>
                 @endif
             </tr>
             <tr>
@@ -55,20 +57,21 @@
 
                     @foreach($subjects as $subject)
                         @php
-                            $note = $notesData[$student->id][$semester][$subject->id] ?? '-';
+                            $note = $notesData[$student->id][$semester][$subject->id] ?? null;
                             $coef = $coefficients[$subject->id] ?? '-';
+                            $display = $note === 'Dispensé(e)' ? 'Disp.' : ($note !== null ? number_format($note, 2) : '-');
                         @endphp
-                        <td>{{ $note }}</td>
+                        <td>{{ $display }}</td>
                         <td>{{ $coef }}</td>
                     @endforeach
 
-                    @if ($semester == 1)
-                        <td><strong>{{ $moyennesS1[$student->id] ?? '-' }}</strong></td>
+                    @if($semester == 1)
+                        <td><strong>{{ isset($moyennesS1[$student->id]) ? number_format($moyennesS1[$student->id], 2) : '-' }}</strong></td>
                         <td>{{ $rangsS1[$student->id] ?? '-' }}</td>
                     @else
-                        <td>{{ $moyennesS1[$student->id] ?? '-' }}</td>
-                        <td><strong>{{ $moyennesS2[$student->id] ?? '-' }}</strong></td>
-                        <td><strong>{{ $moyennesAnnuelles[$student->id] ?? '-' }}</strong></td>
+                        <td>{{ isset($moyennesS1[$student->id]) ? number_format($moyennesS1[$student->id], 2) : '-' }}</td>
+                        <td><strong>{{ isset($moyennesS2[$student->id]) ? number_format($moyennesS2[$student->id], 2) : '-' }}</strong></td>
+                        <td><strong>{{ isset($moyennesAnnuelles[$student->id]) ? number_format($moyennesAnnuelles[$student->id], 2) : '-' }}</strong></td>
                         <td>{{ $rangsS2[$student->id] ?? '-' }}</td>
                         <td>{{ $rangsAnnuels[$student->id] ?? '-' }}</td>
                     @endif
@@ -79,13 +82,14 @@
 
     <div class="footer">
         <p>
-            Moy. = Moyenne pondérée <br>
+            Moy. = Moyenne pondérée par coefficient
             @if($semester == 2)
-                Moy. Annuelle = (Moy. S1 + Moy. S2) / 2
+                &nbsp;|&nbsp; Moy. Ann. = (Moy. S1 + Moy. S2) / 2
             @endif
+            &nbsp;|&nbsp; Imprimé le {{ $dateImpression }}
         </p>
-        <div style="text-align: right;">
-            <div class="signature">Le Directeur</div>
+        <div style="text-align: right; margin-top: 10px;">
+            <span class="signature">Le Directeur</span>
         </div>
     </div>
 </body>

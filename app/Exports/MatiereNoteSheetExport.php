@@ -19,56 +19,73 @@ class MatiereNoteSheetExport implements FromCollection, WithTitle, WithHeadings,
     public function __construct($classroomId, $yearId, $ratio)
     {
         $this->classroomId = $classroomId;
-        $this->yearId = $yearId;
-        $this->ratio = $ratio;
+        $this->yearId      = $yearId;
+        $this->ratio       = $ratio;
     }
 
     public function title(): string
     {
-        return $this->ratio ? $this->ratio->subject->name : 'Aucune matière';
+        // Excel limite les noms d'onglets à 31 caractères
+        $name = $this->ratio ? $this->ratio->subject->name : 'Aucune matière';
+        return mb_substr($name, 0, 31);
     }
 
     public function headings(): array
     {
-        return ['Matricule', 'Nom', 'Prénom', 'Moyenne Interros', 'Devoir 1', 'Devoir 2'];
+        return ['Matricule', 'Nom', 'Prénom', 'Moy. Interros', 'Devoir 1', 'Devoir 2', 'Moy./20'];
     }
 
     public function columnFormats(): array
     {
         return [
-            'A' => NumberFormat::FORMAT_TEXT, // Colonne A = Matricule
+            'A' => NumberFormat::FORMAT_TEXT, // Matricule en texte pour éviter la troncature
         ];
     }
 
     public function collection()
     {
         if (!$this->ratio) {
-            return collect([
-                ['Aucune matière trouvée pour cette classe ou année.']
-            ]);
+            return collect([['Aucune matière trouvée pour cette classe ou année.']]);
         }
 
         $recordings = Recording::with('student')
             ->where('classroom_id', $this->classroomId)
             ->where('year_id', $this->yearId)
-            ->get();
+            ->get()
+            ->sortBy('student.name');
 
         return $recordings->map(function ($rec) {
+            // On prend la note du semestre le plus récent pour cette matière
             $note = Note::where('recording_id', $rec->id)
-                        ->where('ratio_id', $this->ratio->id)
-                        ->latest('semester')
-                        ->first();
+                ->where('ratio_id', $this->ratio->id)
+                ->latest('semester')
+                ->first();
 
-            $interros = $note && $note->interros ? collect($note->interros) : collect([]);
-            $moyenneInterro = $interros->count() ? round($interros->avg(), 2) : null;
+            // Sécurité : interros peut être null si aucune note
+            $interrosRaw    = $note?->interros ?? null;
+            $interrosArr    = is_array($interrosRaw)
+                ? $interrosRaw
+                : (json_decode($interrosRaw ?? '[]', true) ?? []);
+            $interrosCol    = collect(array_filter($interrosArr, fn($v) => $v !== null));
+            $moyenneInterro = $interrosCol->count() ? round($interrosCol->avg(), 2) : null;
+
+            // Calcul moy/20 (même formule que le contrôleur)
+            $composantes = [];
+            if ($moyenneInterro !== null) $composantes[] = $moyenneInterro;
+            if ($note?->devoir1 !== null) $composantes[] = floatval($note->devoir1);
+            if ($note?->devoir2 !== null) $composantes[] = floatval($note->devoir2);
+            $moy20 = count($composantes) > 0
+                ? round(array_sum($composantes) / count($composantes), 2)
+                : null;
 
             return [
-                (string) ($rec->student->matricule ?? ''), // Matricule converti en string
-                $rec->student->name,
-                $rec->student->surname,
+                (string) ($rec->student->matricule ?? ''),
+                $rec->student->name    ?? '',
+                $rec->student->surname ?? '',
                 $moyenneInterro,
-                $note->devoir1 ?? null,
-                $note->devoir2 ?? null,
+                $note?->devoir1 ?? null,
+                $note?->devoir2 ?? null,
+                $moy20,
             ];
         });
     }
