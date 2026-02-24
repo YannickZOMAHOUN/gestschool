@@ -10,14 +10,20 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-   public function handle(Request $request, Closure $next, string $role): Response
+   public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = $request->user();
 
-        if (!$user || !$user->roles()->where('name', $role)->exists()) {
-            abort(403, 'Accès refusé. Rôle requis : ' . $role);
+        if (!$user) {
+            abort(403, 'Non authentifié.');
         }
 
-        return $next($request);
+        foreach ($roles as $role) {
+            if ($user->hasRole(trim($role))) {
+                return $next($request);
+            }
+        }
+
+        abort(403, 'Accès refusé. Vous n\'avez pas les droits nécessaires pour cette page.');
     }
 }

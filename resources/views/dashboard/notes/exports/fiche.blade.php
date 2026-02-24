@@ -53,12 +53,12 @@
         <tbody>
             @foreach($students as $student)
                 <tr>
-                    <td class="student-name">{{ $student->surname }} {{ $student->name }}</td>
+                    <td class="student-name">{{ $student->name }} {{ $student->surname }}</td>
 
                     @foreach($subjects as $subject)
                         @php
-                            $note = $notesData[$student->id][$semester][$subject->id] ?? null;
-                            $coef = $coefficients[$subject->id] ?? '-';
+                            $note    = $notesData[$student->id][$semester][$subject->id] ?? null;
+                            $coef    = $coefficients[$subject->id] ?? '-';
                             $display = $note === 'Dispensé(e)' ? 'Disp.' : ($note !== null ? number_format($note, 2) : '-');
                         @endphp
                         <td>{{ $display }}</td>
@@ -84,7 +84,7 @@
         <p>
             Moy. = Moyenne pondérée par coefficient
             @if($semester == 2)
-                &nbsp;|&nbsp; Moy. Ann. = (Moy. S1 + Moy. S2) / 2
+                &nbsp;|&nbsp; Moy. Ann. = (S2 × 2 + S1) / 3
             @endif
             &nbsp;|&nbsp; Imprimé le {{ $dateImpression }}
         </p>

@@ -124,6 +124,62 @@
             {{-- RÉSULTATS --}}
             @if($classroom && $studentsData->isNotEmpty())
 
+                @php
+                    $currentSemester = (int) request('semester');
+
+                    // ── Helper : troncage à 2 décimales (sans arrondi) ────────
+                    // Ex : 1.6666… → 1.66  (et non 1.67 avec round)
+                    $trunc2 = function(?float $v): ?float {
+                        if ($v === null) return null;
+                        return floor($v * 100) / 100;
+                    };
+
+                    // ── Helper : formatage ordinal français ───────────────────
+                    $ordinalFr = function(int $n): string {
+                        return $n === 1 ? '1er' : $n . 'ème';
+                    };
+
+                    // ── Helper : calcul des rangs avec gestion des ex-æquo ────
+                    $calculerRangs = function(array $moyennes) use ($ordinalFr): array {
+                        $avecNote  = array_filter($moyennes, fn($m) => $m !== null);
+                        $sansNote  = array_filter($moyennes, fn($m) => $m === null);
+
+                        arsort($avecNote);
+
+                        $rangs       = [];
+                        $rangCourant = 1;
+                        $prevMoy     = null;
+                        $nbExAequo   = 0;
+
+                        foreach ($avecNote as $sid => $moy) {
+                            if ($moy == $prevMoy) {
+                                $rangs[$sid] = $ordinalFr($rangCourant - $nbExAequo);
+                                $nbExAequo++;
+                            } else {
+                                $rangCourant += $nbExAequo;
+                                $nbExAequo    = 0;
+                                $rangs[$sid]  = $ordinalFr($rangCourant);
+                                $prevMoy      = $moy;
+                            }
+                            $rangCourant++;
+                        }
+
+                        foreach (array_keys($sansNote) as $sid) {
+                            $rangs[$sid] = '—';
+                        }
+
+                        return $rangs;
+                    };
+
+                    // ── Calcul des rangs semestriels ──────────────────────────
+                    $moyennesGenerales = $studentsData->mapWithKeys(fn($s) => [
+                        $s['student']->id => $s['moyenne_generale']
+                    ])->toArray();
+
+                    $rangsGeneraux = $calculerRangs($moyennesGenerales);
+                    $totalEleves   = $studentsData->count();
+                @endphp
+
                 {{-- Bandeau d'info --}}
                 <div class="alert border-0 text-white shadow-sm mb-4"
                      style="background:linear-gradient(135deg,#17a2b8,#117a8b);">
@@ -134,7 +190,7 @@
                                 {{ $classroom->promotionSector->promotion_sector }} — {{ $classroom->name }}
                             </h5>
                             <p class="mb-0 opacity-75">
-                                Semestre {{ request('semester') }} &nbsp;|&nbsp;
+                                Semestre {{ $currentSemester }} &nbsp;|&nbsp;
                                 {{ $classroom->promotionSector->sectorYear->year->year }} &nbsp;|&nbsp;
                                 {{ $classroom->promotionSector->sectorYear->sector->name_sector }}
                             </p>
@@ -145,86 +201,241 @@
                     </div>
                 </div>
 
-                {{-- Tableau principal --}}
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered align-middle">
-                        <thead class="table-primary">
-                            {{-- Ligne 1 : en-têtes regroupés --}}
-                            <tr>
-                                <th rowspan="2" class="align-middle">Étudiant</th>
-                                <th rowspan="2" class="align-middle">Matricule</th>
+                {{-- BLOCS PAR ÉTUDIANT --}}
+                @foreach($studentsData as $studentRow)
+                    @php
+                        $student         = $studentRow['student'];
+                        $notesParMatiere = $studentRow['notes_par_matiere'];
+                        $moyGen          = $studentRow['moyenne_generale'];
+                        $rangSem         = $rangsGeneraux[$student->id] ?? '—';
 
-                                @foreach($subjects as $subjectId => $subjectInfo)
-                                    <th colspan="4" class="text-center">
-                                        {{ $subjectInfo['name'] }}
-                                        <small class="text-muted">(Coef : {{ $subjectInfo['coefficient'] }})</small>
-                                    </th>
-                                @endforeach
+                        $moyS1       = null;
+                        $moyS2       = null;
+                        $moyAnnuelle = null;
 
-                                <th rowspan="2" class="align-middle text-center">Moy. Gén.</th>
-                            </tr>
-                            {{-- Ligne 2 : sous-colonnes --}}
-                            <tr>
-                                @foreach($subjects as $subjectId => $subjectInfo)
-                                    <th class="text-center small">Interros</th>
-                                    <th class="text-center small">Dev.1</th>
-                                    <th class="text-center small">Dev.2</th>
-                                    <th class="text-center small">Moy.</th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($studentsData as $studentRow)
-                                @php
-                                    $student         = $studentRow['student'];
-                                    $notesParMatiere = $studentRow['notes_par_matiere'];
-                                    $moyGen          = $studentRow['moyenne_generale'];
-                                @endphp
-                                <tr>
-                                    <td class="fw-bold">{{ $student->name }} {{ $student->surname }}</td>
-                                    <td>{{ $student->matricule ?? 'N/A' }}</td>
+                        if ($currentSemester == 2) {
+                            $recording = $student->recordings
+                                ->where('year_id', request('year_id'))
+                                ->where('classroom_id', request('classroom_id'))
+                                ->first();
 
-                                    @foreach($subjects as $subjectId => $subjectInfo)
-                                        @php
-                                            $matiere     = $notesParMatiere[$subjectId] ?? null;
-                                            $note        = $matiere['note']         ?? null;
-                                            $moyInterros = $matiere['moy_interros'] ?? null;
-                                            $moy20       = $matiere['moy_20']       ?? null;
-                                            $interros    = $note ? (is_array($note->interros) ? $note->interros : (json_decode($note->interros, true) ?? [])) : [];
-                                        @endphp
+                            if ($recording) {
+                                $notesS1 = \App\Models\Note::with(['ratio'])
+                                    ->where('recording_id', $recording->id)
+                                    ->where('semester', 1)
+                                    ->get();
 
-                                        {{-- Interros --}}
-                                        <td class="text-center small">
-                                            @if(!empty($interros))
-                                                {{ implode(', ', array_map(fn($v) => number_format($v, 2), $interros)) }}
-                                                <br><em class="text-muted">Moy : {{ number_format($moyInterros, 2) }}</em>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        {{-- Devoir 1 --}}
-                                        <td class="text-center">
-                                            {{ $note?->devoir1 !== null ? number_format($note->devoir1, 2) : '—' }}
-                                        </td>
-                                        {{-- Devoir 2 --}}
-                                        <td class="text-center">
-                                            {{ $note?->devoir2 !== null ? number_format($note->devoir2, 2) : '—' }}
-                                        </td>
-                                        {{-- Moyenne /20 --}}
-                                        <td class="text-center fw-bold {{ $moy20 !== null ? ($moy20 >= 10 ? 'text-success' : 'text-danger') : '' }}">
-                                            {{ $moy20 !== null ? number_format($moy20, 2) : '—' }}
-                                        </td>
-                                    @endforeach
+                                $totalPondS1 = 0; $totalCoefS1 = 0;
+                                foreach ($notesS1 as $noteS1) {
+                                    $interrosS1 = is_array($noteS1->interros)
+                                        ? $noteS1->interros
+                                        : (json_decode($noteS1->interros, true) ?? []);
+                                    $moy = app(\App\Http\Controllers\NoteController::class)
+                                        ->calculateMoyenne20($interrosS1, $noteS1->devoir1, $noteS1->devoir2);
+                                    if ($moy !== null) {
+                                        $coef = $noteS1->ratio->coefficient ?? 1;
+                                        $totalPondS1 += $moy * $coef;
+                                        $totalCoefS1 += $coef;
+                                    }
+                                }
+                                // Troncage (pas d'arrondi)
+                                $moyS1 = $totalCoefS1 > 0 ? $trunc2($totalPondS1 / $totalCoefS1) : null;
+                            }
 
-                                    {{-- Moyenne générale pondérée --}}
-                                    <td class="text-center fw-bold {{ $moyGen !== null ? ($moyGen >= 10 ? 'text-success' : 'text-danger') : '' }}">
-                                        {{ $moyGen !== null ? number_format($moyGen, 2) : '—' }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                            $moyS2 = $moyGen;
+
+                            // Formule : (S2 × 2 + S1) / 3 — troncage final
+                            if ($moyS1 !== null && $moyS2 !== null) {
+                                $moyAnnuelle = $trunc2((($moyS2 * 2) + $moyS1) / 3);
+                            } elseif ($moyS2 !== null) {
+                                $moyAnnuelle = $moyS2;
+                            } elseif ($moyS1 !== null) {
+                                $moyAnnuelle = $moyS1;
+                            }
+                        }
+                    @endphp
+
+                    <div class="card border-0 shadow-sm mb-4 student-card">
+                        {{-- En-tête élève --}}
+                        <div class="card-header d-flex justify-content-between align-items-center py-2"
+                             style="background: linear-gradient(90deg, #0d6efd11, #0d6efd05); border-left: 4px solid #0d6efd;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+                                     style="width:40px;height:40px;font-size:1rem;">
+                                    {{ strtoupper(substr($student->name, 0, 1)) }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">
+                                        {{ $student->name }} {{ $student->surname }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        Matricule : {{ $student->matricule ?? 'N/A' }}
+                                        @if($student->sex) &nbsp;|&nbsp; {{ $student->sex == 'M' ? 'Masculin' : 'Féminin' }} @endif
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Tableau des matières --}}
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered align-middle mb-0 small">
+                                    <thead style="background-color:#e8f0fe;">
+                                        <tr>
+                                            <th style="width:22%">Matière</th>
+                                            <th class="text-center" style="width:15%">Moy. Interros</th>
+                                            <th class="text-center" style="width:13%">Devoir 1</th>
+                                            <th class="text-center" style="width:13%">Devoir 2</th>
+                                            <th class="text-center" style="width:13%">Moyenne /20</th>
+                                            <th class="text-center" style="width:13%">Coefficient</th>
+                                            <th class="text-center" style="width:11%">Moy. Coeff.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($subjects as $subjectId => $subjectInfo)
+                                            @php
+                                                $matiere     = $notesParMatiere[$subjectId] ?? null;
+                                                $note        = $matiere['note']         ?? null;
+                                                $moyInterros = $matiere['moy_interros'] ?? null;
+                                                $moy20       = $matiere['moy_20']       ?? null;
+                                                $coef        = $subjectInfo['coefficient'];
+                                                // Troncage de la moyenne coefficientée
+                                                $moyCoeff    = $moy20 !== null ? $trunc2($moy20 * $coef) : null;
+                                                $interros    = $note ? (is_array($note->interros) ? $note->interros : (json_decode($note->interros, true) ?? [])) : [];
+                                            @endphp
+                                            <tr>
+                                                <td class="fw-semibold">{{ $subjectInfo['name'] }}</td>
+
+                                                {{-- Moy. Interros --}}
+                                                <td class="text-center">
+                                                    @if(!empty($interros))
+                                                        <span class="d-block small text-muted">
+                                                            {{ implode(' | ', array_map(fn($v) => number_format($v, 2), $interros)) }}
+                                                        </span>
+                                                        <span class="fw-bold {{ $moyInterros >= 10 ? 'text-success' : 'text-danger' }}">
+                                                            {{ number_format($moyInterros, 2) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Devoir 1 --}}
+                                                <td class="text-center">
+                                                    @if($note?->devoir1 !== null)
+                                                        <span class="fw-semibold {{ $note->devoir1 >= 10 ? 'text-success' : 'text-danger' }}">
+                                                            {{ number_format($note->devoir1, 2) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Devoir 2 --}}
+                                                <td class="text-center">
+                                                    @if($note?->devoir2 !== null)
+                                                        <span class="fw-semibold {{ $note->devoir2 >= 10 ? 'text-success' : 'text-danger' }}">
+                                                            {{ number_format($note->devoir2, 2) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Moyenne /20 --}}
+                                                <td class="text-center fw-bold {{ $moy20 !== null ? ($moy20 >= 10 ? 'text-success' : 'text-danger') : '' }}">
+                                                    {{ $moy20 !== null ? number_format($moy20, 2) : '—' }}
+                                                </td>
+
+                                                {{-- Coefficient --}}
+                                                <td class="text-center text-muted">{{ $coef }}</td>
+
+                                                {{-- Moy. Coefficiée --}}
+                                                <td class="text-center fw-bold {{ $moyCoeff !== null ? ($moyCoeff >= 10 * $coef ? 'text-success' : 'text-warning') : '' }}">
+                                                    {{ $moyCoeff !== null ? number_format($moyCoeff, 2) : '—' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {{-- Récapitulatif en bas du tableau --}}
+                            <div class="px-3 py-3 border-top" style="background:#f8f9ff;">
+                                <div class="row g-2 text-center">
+
+                                    {{-- Moyenne semestrielle --}}
+                                    <div class="col">
+                                        <div class="rounded p-2 h-100" style="background:#fff;border:1px solid #dee2ff;">
+                                            <div class="small text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:.05em;">
+                                                Moy. Sem. {{ $currentSemester }}
+                                            </div>
+                                            <div class="fw-bold fs-5 mt-1 {{ $moyGen !== null ? ($moyGen >= 10 ? 'text-success' : 'text-danger') : 'text-muted' }}">
+                                                {{ $moyGen !== null ? number_format($moyGen, 2) : '—' }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Rang semestriel --}}
+                                    <div class="col">
+                                        <div class="rounded p-2 h-100" style="background:#fff;border:1px solid #dee2ff;">
+                                            <div class="small text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:.05em;">
+                                                Rang Sem. {{ $currentSemester }}
+                                            </div>
+                                            <div class="fw-bold fs-5 mt-1 text-primary">
+                                                {{ $rangSem !== '—' ? $rangSem . '/' . $totalEleves : '—' }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($currentSemester == 2)
+                                        {{-- Moyenne S1 --}}
+                                        <div class="col">
+                                            <div class="rounded p-2 h-100" style="background:#fff;border:1px solid #dee2ff;">
+                                                <div class="small text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:.05em;">
+                                                    Moy. Sem. 1
+                                                </div>
+                                                <div class="fw-bold fs-5 mt-1 {{ $moyS1 !== null ? ($moyS1 >= 10 ? 'text-success' : 'text-danger') : 'text-muted' }}">
+                                                    {{ $moyS1 !== null ? number_format($moyS1, 2) : '—' }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Moyenne annuelle --}}
+                                        <div class="col">
+                                            <div class="rounded p-2 h-100" style="background:#fff;border:1px solid #dee2ff;">
+                                                <div class="small text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:.05em;">
+                                                    Moy. Annuelle
+                                                    <span class="d-block" style="font-size:0.6rem;color:#adb5bd;">(S2×2 + S1) / 3</span>
+                                                </div>
+                                                <div class="fw-bold fs-5 mt-1 {{ $moyAnnuelle !== null ? ($moyAnnuelle >= 10 ? 'text-success' : 'text-danger') : 'text-muted' }}">
+                                                    {{ $moyAnnuelle !== null ? number_format($moyAnnuelle, 2) : '—' }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Rang annuel --}}
+                                        <div class="col">
+                                            <div class="rounded p-2 h-100" style="background:#fff;border:1px solid #dee2ff;">
+                                                <div class="small text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:.05em;">
+                                                    Rang Annuel
+                                                </div>
+                                                <div class="fw-bold fs-5 mt-1 text-primary">
+                                                    @php
+                                                        echo isset($rangsAnnuelsVue[$student->id])
+                                                            ? $rangsAnnuelsVue[$student->id] . '/' . $totalEleves
+                                                            : '—';
+                                                    @endphp
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
 
                 {{-- Statistiques rapides --}}
                 <div class="row mt-4 g-3">
@@ -253,7 +464,6 @@
 
             @elseif(request()->has(['year_id','sector_id','promotion_id','classroom_id','semester']))
 
-                {{-- Aucune note trouvée --}}
                 <div class="text-center py-5">
                     <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Aucune note disponible</h5>
@@ -262,7 +472,6 @@
 
             @else
 
-                {{-- Message par défaut --}}
                 <div class="text-center py-5">
                     <i class="fas fa-search fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Sélectionnez les critères pour afficher les notes</h5>
@@ -277,6 +486,81 @@
 
 @section('another_JS')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- Calcul des rangs annuels AVANT le rendu des blocs (injection PHP côté serveur) --}}
+@if($classroom && $studentsData->isNotEmpty() && request('semester') == 2)
+@php
+    $ordinalFrAnn = function(int $n): string {
+        return $n === 1 ? '1er' : $n . 'ème';
+    };
+
+    // Helper troncage (dupliqué ici car hors scope du @php principal)
+    $trunc2Ann = function(?float $v): ?float {
+        if ($v === null) return null;
+        return floor($v * 100) / 100;
+    };
+
+    // Calculer toutes les moyennes annuelles
+    $moyAnnuellesVue = [];
+    foreach ($studentsData as $sRow) {
+        $sid = $sRow['student']->id;
+        $recording = $sRow['student']->recordings
+            ->where('year_id', request('year_id'))
+            ->where('classroom_id', request('classroom_id'))
+            ->first();
+
+        $moyS1tmp = null;
+        if ($recording) {
+            $notesS1tmp = \App\Models\Note::with(['ratio'])
+                ->where('recording_id', $recording->id)
+                ->where('semester', 1)->get();
+            $tp = 0; $tc = 0;
+            foreach ($notesS1tmp as $nS1) {
+                $int = is_array($nS1->interros) ? $nS1->interros : (json_decode($nS1->interros, true) ?? []);
+                $m = app(\App\Http\Controllers\NoteController::class)->calculateMoyenne20($int, $nS1->devoir1, $nS1->devoir2);
+                if ($m !== null) { $tp += $m * ($nS1->ratio->coefficient ?? 1); $tc += ($nS1->ratio->coefficient ?? 1); }
+            }
+            // Troncage (pas d'arrondi)
+            $moyS1tmp = $tc > 0 ? $trunc2Ann($tp / $tc) : null;
+        }
+        $moyS2tmp = $sRow['moyenne_generale'];
+
+        // Formule annuelle : (S2 × 2 + S1) / 3 — troncage final
+        if ($moyS1tmp !== null && $moyS2tmp !== null) {
+            $moyAnnuellesVue[$sid] = $trunc2Ann((($moyS2tmp * 2) + $moyS1tmp) / 3);
+        } else {
+            $moyAnnuellesVue[$sid] = $moyS2tmp ?? $moyS1tmp;
+        }
+    }
+
+    // Calcul des rangs annuels avec gestion des ex-æquo
+    $rangsAnnuelsVue = [];
+    $avecNoteAnn  = array_filter($moyAnnuellesVue, fn($m) => $m !== null);
+    $sansNoteAnn  = array_filter($moyAnnuellesVue, fn($m) => $m === null);
+    arsort($avecNoteAnn);
+
+    $rangCourantAnn = 1;
+    $prevMoyAnn     = null;
+    $nbExAequoAnn   = 0;
+
+    foreach ($avecNoteAnn as $sid => $moy) {
+        if ($moy == $prevMoyAnn) {
+            $rangsAnnuelsVue[$sid] = $ordinalFrAnn($rangCourantAnn - $nbExAequoAnn);
+            $nbExAequoAnn++;
+        } else {
+            $rangCourantAnn += $nbExAequoAnn;
+            $nbExAequoAnn    = 0;
+            $rangsAnnuelsVue[$sid] = $ordinalFrAnn($rangCourantAnn);
+            $prevMoyAnn = $moy;
+        }
+        $rangCourantAnn++;
+    }
+    foreach (array_keys($sansNoteAnn) as $sid) {
+        $rangsAnnuelsVue[$sid] = '—';
+    }
+@endphp
+@endif
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -344,7 +628,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Validation du formulaire
     document.getElementById('filterForm').addEventListener('submit', function (e) {
         if (!this.checkValidity()) {
             e.preventDefault();
@@ -356,9 +639,19 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <style>
+.student-card {
+    border-radius: 12px !important;
+    overflow: hidden;
+    transition: box-shadow .2s;
+}
+.student-card:hover {
+    box-shadow: 0 6px 24px rgba(13,110,253,.13) !important;
+}
 @media print {
-    .card-header, .btn, form, .alert { display: none !important; }
-    .table { font-size: 11px; }
+    .card-header > .d-flex > button,
+    form, .alert { display: none !important; }
+    .student-card { break-inside: avoid; margin-bottom: 24px; }
+    .table { font-size: 10px; }
 }
 </style>
 @endsection

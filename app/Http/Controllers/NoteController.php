@@ -22,6 +22,17 @@ use Maatwebsite\Excel\Facades\Excel;
 class NoteController extends Controller
 {
     // =========================================================
+    // HELPER — Troncage à 2 décimales (sans arrondi)
+    // Ex : 1.6666… → 1.66  (et non 1.67 avec round)
+    // =========================================================
+
+    private function trunc2(?float $val): ?float
+    {
+        if ($val === null) return null;
+        return floor($val * 100) / 100;
+    }
+
+    // =========================================================
     // VUES PRINCIPALES
     // =========================================================
 
@@ -117,7 +128,7 @@ class NoteController extends Controller
                                 : (json_decode($note->interros, true) ?? []);
 
                             $moyInterros = count($interros) > 0
-                                ? round(array_sum($interros) / count($interros), 2)
+                                ? $this->trunc2(array_sum($interros) / count($interros))
                                 : null;
 
                             $moy20 = $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2);
@@ -136,7 +147,7 @@ class NoteController extends Controller
                     }
 
                     $moyenneGenerale = $totalCoef > 0
-                        ? round($totalMoyPonderee / $totalCoef, 2)
+                        ? $this->trunc2($totalMoyPonderee / $totalCoef)
                         : null;
 
                     $recording = $studentNotes->first()->recording;
@@ -220,7 +231,7 @@ class NoteController extends Controller
     public function getcards(Request $request)
     {
         $years = Year::orderBy('year', 'desc')->get();
-        return view('dashboard.notes.cards', compact('years'));
+        return view('dashboard.notes.card', compact('years'));
     }
 
     /**
@@ -313,26 +324,26 @@ class NoteController extends Controller
                     }
                 }
 
-                $moy = $totalCoef > 0 ? round($totalPond / $totalCoef, 2) : null;
+                $moy = $totalCoef > 0 ? $this->trunc2($totalPond / $totalCoef) : null;
                 if ($sem === 1) $moyennesS1[$sid] = $moy;
                 else           $moyennesS2[$sid] = $moy;
             }
         }
 
-        // ── Moyennes annuelles ────────────────────────────────────────────
+        // ── Moyennes annuelles : (S1 + S2) / 2 ───────────────────────────
         $moyennesAnnuelles = [];
         foreach ($students as $student) {
             $sid = $student->id;
             $m1  = $moyennesS1[$sid] ?? null;
             $m2  = $moyennesS2[$sid] ?? null;
             $moyennesAnnuelles[$sid] = ($m1 !== null && $m2 !== null)
-                ? round(($m1 + $m2) / 2, 2)
+                ? $this->trunc2(($m1 + $m2) / 2)
                 : ($m1 ?? $m2);
         }
 
         // ── Calcul des rangs ──────────────────────────────────────────────
-        $rangsS1 = $this->calculerRangs($moyennesS1);
-        $rangsS2 = $this->calculerRangs($moyennesS2);
+        $rangsS1      = $this->calculerRangs($moyennesS1);
+        $rangsS2      = $this->calculerRangs($moyennesS2);
         $rangsAnnuels = $this->calculerRangs($moyennesAnnuelles);
 
         // ── Rangs par matière (pour les bulletins) ────────────────────────
@@ -364,13 +375,13 @@ class NoteController extends Controller
         $data['dateImpression'] = Carbon::now()->format('d/m/Y');
 
         if ($request->export_type === 'fiche_collation') {
-            $pdf = Pdf::loadView('dashboard.notes.pdf.fiche_collation', $data)
+            $pdf = Pdf::loadView('dashboard.notes.exports.fiche', $data)
                 ->setPaper('a3', 'landscape');
             return $pdf->download("fiche_collation_{$classroom->name}_S{$semester}.pdf");
         }
 
         // fiche_bulletin
-        $pdf = Pdf::loadView('dashboard.notes.pdf.bulletin', $data)
+        $pdf = Pdf::loadView('dashboard.notes.exports.bulletin', $data)
             ->setPaper('a4', 'portrait');
         return $pdf->download("bulletins_{$classroom->name}_S{$semester}.pdf");
     }
@@ -514,8 +525,13 @@ class NoteController extends Controller
                 : [];
             $devoir1     = $note?->devoir1;
             $devoir2     = $note?->devoir2;
-            $moyInterros = count($interros) > 0 ? round(array_sum($interros) / count($interros), 2) : 0;
-            $moy20       = $this->calculateMoyenne20($interros, $devoir1, $devoir2);
+
+            // Troncage (pas d'arrondi) pour la moyenne des interros
+            $moyInterros = count($interros) > 0
+                ? $this->trunc2(array_sum($interros) / count($interros))
+                : 0;
+
+            $moy20 = $this->calculateMoyenne20($interros, $devoir1, $devoir2);
 
             return [
                 'id'           => $recording->student->id,
@@ -604,9 +620,11 @@ class NoteController extends Controller
 
     /**
      * Formule : (Moy_interros + D1 + D2) / nb_composantes_présentes
+     * Troncage à 2 décimales (pas d'arrondi)
      */
     public function calculateMoyenne20(array $interros, $devoir1, $devoir2): ?float
     {
+        // Calcul précis de la moyenne des interros (valeur brute, pas tronquée)
         $moyInterros = count($interros) > 0
             ? array_sum($interros) / count($interros)
             : null;
@@ -621,7 +639,8 @@ class NoteController extends Controller
 
         if (count($composantes) === 0) return null;
 
-        return round(array_sum($composantes) / count($composantes), 2);
+        // Troncage final (pas d'arrondi)
+        return $this->trunc2(array_sum($composantes) / count($composantes));
     }
 
     /**

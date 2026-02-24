@@ -87,6 +87,7 @@
                 <div>
                     <strong>Navigation rapide :</strong> Utilisez <kbd>TAB</kbd> ou <kbd>ENTRÉE</kbd> pour naviguer.
                     Un champ en-tête de colonne applique la valeur à toute la colonne.
+                    Les notes sont sur <strong>/20</strong>.
                 </div>
             </div>
 
@@ -96,11 +97,12 @@
                     <thead class="table-primary">
                         <tr>
                             <th width="4%">#</th>
-                            <th width="14%">Nom</th>
-                            <th width="14%">Prénom</th>
+                            <th width="16%">Nom</th>
+                            <th width="16%">Prénom</th>
 
-                            @for($i = 1; $i <= 5; $i++)
-                            <th width="7%" class="text-center">
+                            {{-- 3 champs interro --}}
+                            @for($i = 1; $i <= 3; $i++)
+                            <th width="9%" class="text-center">
                                 <div class="fw-bold mb-1">Interro {{ $i }}</div>
                                 <input type="number"
                                        class="form-control form-control-sm text-center header-input interro-header"
@@ -171,11 +173,20 @@
 <script>
 class NotesManager {
     constructor() {
-        this.currentData = null;
-        this.csrfToken   = '{{ csrf_token() }}';
+        this.currentData  = null;
+        this.INTERRO_COUNT = 3;
+        this.csrfToken    = '{{ csrf_token() }}';
         this.initializeElements();
         this.bindEvents();
         this.setupKeyboardNavigation();
+    }
+
+    // ----------------------------------------------------------
+    // Troncage à 2 décimales SANS arrondi
+    // Ex : 1.6666… → 1.66  (et non 1.67)
+    // ----------------------------------------------------------
+    trunc2(val) {
+        return Math.floor(val * 100) / 100;
     }
 
     // ----------------------------------------------------------
@@ -318,9 +329,9 @@ class NotesManager {
 
             if (data.success && data.subjects?.length) {
                 data.subjects.forEach(s => {
-                    const opt           = document.createElement('option');
-                    opt.value           = s.ratio_id;            // valeur = ratio_id
-                    opt.textContent     = `${s.subject_name} (Coeff : ${s.coefficient})`;
+                    const opt               = document.createElement('option');
+                    opt.value               = s.ratio_id;
+                    opt.textContent         = `${s.subject_name} (Coeff : ${s.coefficient})`;
                     opt.dataset.coefficient = s.coefficient;
                     opt.dataset.subjectId   = s.subject_id;
                     this.el.subject.appendChild(opt);
@@ -428,7 +439,7 @@ class NotesManager {
         if (!this.currentData?.length) {
             this.el.tbody.innerHTML = `
                 <tr>
-                    <td colspan="11" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
                         <i class="fas fa-users-slash fa-2x mb-3 d-block"></i>
                         Aucun étudiant trouvé pour cette classe.
                     </td>
@@ -440,8 +451,8 @@ class NotesManager {
 
         let html = '';
         this.currentData.forEach((student, idx) => {
-            const disabled  = student.is_disabled ? 'disabled' : '';
-            const interros  = student.interros ?? [];
+            const disabled = student.is_disabled ? 'disabled' : '';
+            const interros = student.interros ?? [];
 
             html += `
             <tr data-index="${idx}">
@@ -449,9 +460,11 @@ class NotesManager {
                 <td>${this.esc(student.name)}</td>
                 <td>${this.esc(student.surname)}</td>`;
 
-            // 5 champs interro
-            for (let i = 0; i < 5; i++) {
-                const val = interros[i] !== undefined ? parseFloat(interros[i]).toFixed(2) : '';
+            // 3 champs interro
+            for (let i = 0; i < this.INTERRO_COUNT; i++) {
+                const val = interros[i] !== undefined
+                    ? this.trunc2(parseFloat(interros[i])).toFixed(2)
+                    : '';
                 html += `
                 <td class="text-center p-1">
                     <input type="number"
@@ -466,13 +479,13 @@ class NotesManager {
             const moyI = student.moy_interros ?? 0;
             html += `
                 <td class="text-center bg-light fw-bold">
-                    <span class="moy-interro" data-index="${idx}">${moyI.toFixed(2)}</span>
+                    <span class="moy-interro" data-index="${idx}">${moyI > 0 || interros.length > 0 ? this.trunc2(parseFloat(moyI)).toFixed(2) : '—'}</span>
                 </td>`;
 
             // Devoir 1 & 2
             ['devoir1', 'devoir2'].forEach(field => {
                 const val = student[field] !== null && student[field] !== undefined
-                    ? parseFloat(student[field]).toFixed(2) : '';
+                    ? this.trunc2(parseFloat(student[field])).toFixed(2) : '';
                 html += `
                 <td class="text-center p-1">
                     <input type="number"
@@ -484,19 +497,20 @@ class NotesManager {
             });
 
             // Moyenne /20
-            const moy20 = student.moy_20 ?? 0;
-            const colorClass = moy20 >= 10 ? 'bg-success' : 'bg-danger';
+            const moy20 = student.moy_20;
+            const colorClass = moy20 !== null ? (moy20 >= 10 ? 'bg-success' : 'bg-danger') : 'bg-secondary';
+            const moy20Display = moy20 !== null ? this.trunc2(parseFloat(moy20)).toFixed(2) : '—';
             html += `
                 <td class="text-center ${colorClass} text-white fw-bold">
-                    <span class="moy-20" data-index="${idx}">${moy20 !== null ? moy20.toFixed(2) : '—'}</span>
+                    <span class="moy-20" data-index="${idx}">${moy20Display}</span>
                 </td>
             </tr>`;
         });
 
-        this.el.tbody.innerHTML          = html;
-        this.el.container.style.display  = 'block';
-        this.el.count.textContent        = this.currentData.length;
-        this.el.btnSave.disabled         = false;
+        this.el.tbody.innerHTML         = html;
+        this.el.container.style.display = 'block';
+        this.el.count.textContent       = this.currentData.length;
+        this.el.btnSave.disabled        = false;
 
         this.bindInputEvents();
         this.bindHeaderEvents();
@@ -531,16 +545,16 @@ class NotesManager {
         if (header.classList.contains('interro-header')) {
             const i = parseInt(header.dataset.index);
             document.querySelectorAll(`.interro-input[data-interro-index="${i}"]:not(:disabled)`)
-                .forEach(inp => { inp.value = value.toFixed(2); this.recalculate(inp); });
+                .forEach(inp => { inp.value = this.trunc2(value).toFixed(2); this.recalculate(inp); });
         } else {
             const field = header.dataset.field;
             document.querySelectorAll(`.devoir-input[data-field="${field}"]:not(:disabled)`)
-                .forEach(inp => { inp.value = value.toFixed(2); this.recalculate(inp); });
+                .forEach(inp => { inp.value = this.trunc2(value).toFixed(2); this.recalculate(inp); });
         }
     }
 
     // ----------------------------------------------------------
-    // Calcul des moyennes (côté client — miroir du PHP)
+    // Calcul des moyennes — troncage à 2 décimales (miroir du PHP)
     // ----------------------------------------------------------
 
     recalculate(changedInput) {
@@ -548,9 +562,9 @@ class NotesManager {
         const row = document.querySelector(`tr[data-index="${idx}"]`);
         if (!row) return;
 
-        // Collecter les interros saisies
+        // Collecter les interros saisies (valeurs brutes pour les calculs)
         const interros = [];
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < this.INTERRO_COUNT; i++) {
             const inp = row.querySelector(`.interro-input[data-interro-index="${i}"]`);
             if (inp && inp.value !== '' && !inp.disabled) {
                 const v = parseFloat(inp.value);
@@ -566,51 +580,59 @@ class NotesManager {
         const devoir1 = getDevoir('devoir1');
         const devoir2 = getDevoir('devoir2');
 
-        // Moyenne interros
-        const moyInterros = interros.length > 0
+        // Moyenne interros — valeur brute (pas tronquée) pour les calculs intermédiaires
+        const moyInterrosBrut = interros.length > 0
             ? interros.reduce((a, b) => a + b, 0) / interros.length
             : null;
 
-        // Moyenne /20 — miroir exact de calculateMoyenne20() en PHP
-        // Formule : (Moy_interros + D1 + D2) / nb_composantes_présentes
+        // Moyenne /20 : calcul sur valeurs brutes, troncage uniquement à la fin
         const composantes = [];
-        if (moyInterros !== null) composantes.push(moyInterros);
-        if (devoir1     !== null) composantes.push(devoir1);
-        if (devoir2     !== null) composantes.push(devoir2);
+        if (moyInterrosBrut !== null) composantes.push(moyInterrosBrut);
+        if (devoir1         !== null) composantes.push(devoir1);
+        if (devoir2         !== null) composantes.push(devoir2);
 
-        const moy20 = composantes.length > 0
+        const moy20Brut = composantes.length > 0
             ? composantes.reduce((a, b) => a + b, 0) / composantes.length
             : null;
 
+        // Troncage uniquement pour l'affichage
+        const moyInterrosTronc = moyInterrosBrut !== null ? this.trunc2(moyInterrosBrut) : null;
+        const moy20Tronc       = moy20Brut       !== null ? this.trunc2(moy20Brut)       : null;
+
         // Mise à jour de l'affichage
-        row.querySelector('.moy-interro').textContent = moyInterros !== null ? moyInterros.toFixed(2) : '—';
+        row.querySelector('.moy-interro').textContent =
+            moyInterrosTronc !== null ? moyInterrosTronc.toFixed(2) : '—';
+
         const moy20El = row.querySelector('.moy-20');
-        moy20El.textContent = moy20 !== null ? moy20.toFixed(2) : '—';
+        moy20El.textContent = moy20Tronc !== null ? moy20Tronc.toFixed(2) : '—';
 
-        // Couleur de la case moyenne
         const cell = moy20El.closest('td');
-        cell.classList.remove('bg-success', 'bg-danger');
-        if (moy20 !== null) cell.classList.add(moy20 >= 10 ? 'bg-success' : 'bg-danger');
+        cell.classList.remove('bg-success', 'bg-danger', 'bg-secondary');
+        if (moy20Tronc !== null) cell.classList.add(moy20Tronc >= 10 ? 'bg-success' : 'bg-danger');
+        else cell.classList.add('bg-secondary');
 
-        // Mise à jour en mémoire
+        // Mise à jour en mémoire (valeurs tronquées pour cohérence avec PHP)
         if (this.currentData[idx]) {
-            this.currentData[idx].interros    = interros;
-            this.currentData[idx].devoir1     = devoir1;
-            this.currentData[idx].devoir2     = devoir2;
-            this.currentData[idx].moy_interros = moyInterros;
-            this.currentData[idx].moy_20      = moy20;
+            this.currentData[idx].interros     = interros;
+            this.currentData[idx].devoir1      = devoir1;
+            this.currentData[idx].devoir2      = devoir2;
+            this.currentData[idx].moy_interros = moyInterrosTronc;
+            this.currentData[idx].moy_20       = moy20Tronc;
         }
     }
 
     formatInput(input) {
         if (input.value !== '' && !input.disabled) {
             const v = parseFloat(input.value);
-            if (!isNaN(v)) input.value = Math.min(Math.max(v, 0), 20).toFixed(2);
+            if (!isNaN(v)) {
+                // Clamp entre 0 et 20, puis troncage
+                input.value = this.trunc2(Math.min(Math.max(v, 0), 20)).toFixed(2);
+            }
         }
     }
 
     // ----------------------------------------------------------
-    // Sauvegarde
+    // Sauvegarde — puis vidage des champs
     // ----------------------------------------------------------
 
     async saveNotes() {
@@ -625,7 +647,7 @@ class NotesManager {
             ratio_id:     this.el.ratioId.value,
             semester:     this.el.semester.value,
             notes: this.currentData.map(s => ({
-                recording_id: s.recording_id,   // ← toujours explicite
+                recording_id: s.recording_id,
                 interros:     s.interros ?? [],
                 devoir1:      s.devoir1 ?? null,
                 devoir2:      s.devoir2 ?? null,
@@ -640,7 +662,8 @@ class NotesManager {
             const data = await this.postJson('/api/notes/bulk', payload);
             if (data.success) {
                 this.toast('success', data.message);
-                setTimeout(() => this.loadNotes(), 1200);
+                this.clearInputsAfterSave();
+                setTimeout(() => this.loadNotes(), 1000);
             } else {
                 throw new Error(data.message);
             }
@@ -649,6 +672,34 @@ class NotesManager {
         } finally {
             this.el.btnSave.innerHTML = orig;
             this.el.btnSave.disabled  = false;
+        }
+    }
+
+    clearInputsAfterSave() {
+        document.querySelectorAll('.note-input:not(:disabled)').forEach(inp => {
+            inp.value = '';
+        });
+        document.querySelectorAll('.header-input').forEach(inp => {
+            inp.value = '';
+        });
+        document.querySelectorAll('.moy-interro').forEach(el => {
+            el.textContent = '—';
+        });
+        document.querySelectorAll('.moy-20').forEach(el => {
+            el.textContent = '—';
+            const cell = el.closest('td');
+            cell.classList.remove('bg-success', 'bg-danger');
+            cell.classList.add('bg-secondary');
+        });
+
+        if (this.currentData) {
+            this.currentData.forEach(s => {
+                s.interros     = [];
+                s.devoir1      = null;
+                s.devoir2      = null;
+                s.moy_interros = null;
+                s.moy_20       = null;
+            });
         }
     }
 
@@ -672,21 +723,21 @@ class NotesManager {
     }
 
     clearTable() {
-        this.currentData             = null;
-        this.el.tbody.innerHTML      = '';
+        this.currentData                = null;
+        this.el.tbody.innerHTML         = '';
         this.el.container.style.display = 'none';
-        this.el.count.textContent    = '0';
-        this.el.btnSave.disabled     = true;
-        this.el.coefficient.value    = '';
-        this.el.ratioId.value        = '';
-        this.el.subjectRealId.value  = '';
+        this.el.count.textContent       = '0';
+        this.el.btnSave.disabled        = true;
+        this.el.coefficient.value       = '';
+        this.el.ratioId.value           = '';
+        this.el.subjectRealId.value     = '';
         document.querySelectorAll('.header-input').forEach(h => h.value = '');
     }
 
     resetForm() {
-        this.el.year.value = '';
-        this.resetDownstream('year');
+        this.el.year.value     = '';
         this.el.semester.value = '1';
+        this.resetDownstream('year');
         this.toast('info', 'Formulaire réinitialisé.');
     }
 
