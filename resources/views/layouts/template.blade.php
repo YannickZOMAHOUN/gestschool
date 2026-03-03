@@ -62,7 +62,7 @@
     <div class="container">
         <div class="copyright">
             <p>
-                © <time datetime="2024">2024</time> Copyright
+                © <time datetime="2026">2026</time> Copyright
                 <strong><span>SCHOOL MANAGER</span></strong>.
                 Powered by <strong><span class="fw-bold">BIG MAN TECH</span></strong>.
                 Tous droits réservés.

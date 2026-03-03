@@ -1,145 +1,178 @@
 @extends('layouts.template')
 
+@section('another_CSS')
+<style>
+:root {
+    --bg-base:     #0f1117;
+    --bg-card:     #161b27;
+    --bg-elevated: #1e2535;
+    --border:      #2a3247;
+    --accent:      #4f7df3;
+    --accent-dim:  rgba(79,125,243,.12);
+    --accent-glow: rgba(79,125,243,.35);
+    --success:     #22c55e;
+    --danger:      #ef4444;
+    --text-primary:   #e8eaf0;
+    --text-secondary: #7b8399;
+    --text-muted:     #4a5268;
+    --radius: 10px; --radius-sm: 6px; --transition: .18s ease;
+}
+body { background: var(--bg-base) !important; color: var(--text-primary) !important; }
+.dk-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; }
+.dk-card-header { display:flex; align-items:center; justify-content:space-between; padding:.9rem 1.25rem; border-bottom:1px solid var(--border); background:var(--bg-elevated); }
+.dk-card-header h5 { margin:0; font-size:.92rem; font-weight:700; color:var(--text-primary); }
+.dk-card-body { padding:1.5rem; }
+.form-label { font-size:.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.35rem; display:block; }
+.form-select, .form-control { background:var(--bg-base) !important; border:1px solid var(--border) !important; color:var(--text-primary) !important; border-radius:var(--radius-sm) !important; padding:.55rem .85rem !important; font-size:.875rem !important; transition:border-color var(--transition), box-shadow var(--transition); }
+.form-select:focus, .form-control:focus { border-color:var(--accent) !important; box-shadow:0 0 0 3px var(--accent-glow) !important; outline:none !important; }
+.form-select:disabled, .form-control:disabled { background:var(--bg-elevated) !important; color:var(--text-muted) !important; cursor:not-allowed; }
+.form-select option { background:var(--bg-card); }
+.btn-primary-dk { background:var(--accent); border:none; color:#fff; padding:.5rem 1.3rem; border-radius:20px; font-size:.85rem; font-weight:700; display:inline-flex; align-items:center; gap:.4rem; transition:all var(--transition); cursor:pointer; }
+.btn-primary-dk:hover { background:#3d6ce0; box-shadow:0 4px 14px var(--accent-glow); transform:translateY(-1px); color:#fff; }
+.btn-primary-dk:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn-ghost-dk { background:transparent; border:1px solid var(--border); color:var(--text-secondary); padding:.5rem 1.3rem; border-radius:20px; font-size:.85rem; font-weight:600; display:inline-flex; align-items:center; gap:.4rem; transition:all var(--transition); cursor:pointer; }
+.btn-ghost-dk:hover { border-color:var(--text-secondary); color:var(--text-primary); }
+.btn-danger-dk { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.22); color:var(--danger); padding:.3rem .7rem; border-radius:var(--radius-sm); font-size:.78rem; font-weight:700; display:inline-flex; align-items:center; gap:.3rem; transition:all var(--transition); cursor:pointer; }
+.btn-danger-dk:hover { background:rgba(239,68,68,.2); }
+.dk-table { width:100%; border-collapse:collapse; }
+.dk-table thead th { background:var(--bg-base); color:var(--text-muted); font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:.65rem 1rem; border-bottom:1px solid var(--border); }
+.dk-table tbody td { padding:.7rem 1rem; border-bottom:1px solid rgba(42,50,71,.5); font-size:.875rem; vertical-align:middle; }
+.dk-table tbody tr:last-child td { border-bottom:none; }
+.dk-table tbody tr:hover td { background:var(--accent-dim); }
+.dk-alert { border-radius:var(--radius-sm); padding:.7rem 1rem; font-size:.85rem; display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; }
+.dk-alert-success { background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.25); color:var(--success); }
+.dk-alert-danger  { background:rgba(239,68,68,.1);  border:1px solid rgba(239,68,68,.25);  color:var(--danger); }
+.empty-state { text-align:center; padding:3rem 1rem; color:var(--text-muted); }
+.empty-state i { font-size:1.8rem; margin-bottom:.6rem; display:block; opacity:.3; }
+.modal-content { background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); }
+.modal-header, .modal-footer { border-color:var(--border) !important; }
+.btn-close { filter:invert(1) opacity(.5); }
+#liveClock { font-size:.75rem; color:var(--text-muted); }
+.spinner-border { color:var(--accent) !important; }
+</style>
+@endsection
+
 @section('content')
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-lg mb-4">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chalkboard-teacher me-2"></i>Affectation des enseignants par classe
-                    </h5>
-                    <div id="liveClock" class="text-white fs-6"></div>
-                </div>
+<div class="container-fluid py-4" style="max-width:1180px;">
 
-                <div class="card-body">
-                    <div id="alertContainer"></div>
+    <div class="d-flex align-items-start justify-content-between mb-4">
+        <div>
+            <h4 style="margin:0;font-size:1.05rem;font-weight:700;">
+                <i class="fas fa-chalkboard-teacher me-2" style="color:var(--accent)"></i>Affectation des enseignants
+            </h4>
+            <p style="margin:.2rem 0 0;font-size:.78rem;color:var(--text-muted);">
+                Par classe et par année — une matière = un seul enseignant
+            </p>
+        </div>
+        <span id="liveClock"></span>
+    </div>
 
-                    <form method="POST" action="{{ route('teacher-assignments.store') }}" id="assignmentForm">
-                        @csrf
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Année scolaire</label>
-                                <select name="year_id" id="year_id" class="form-select border-primary" required>
-                                    <option value="">-- Choisissez une année --</option>
-                                    @foreach($years as $year)
-                                        <option value="{{ $year->id }}">{{ $year->year }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+    <div id="alertContainer"></div>
 
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Filière</label>
-                                <select name="sector_id" id="sector_id" class="form-select border-primary" disabled required>
-                                    <option value="">-- Sélectionnez d'abord l'année --</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Promotion</label>
-                                <select name="promotion_id" id="promotion_id" class="form-select border-primary" disabled required>
-                                    <option value="">-- Sélectionnez d'abord la filière --</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Classe</label>
-                                <select name="classroom_id" id="classroom_id" class="form-select border-primary" disabled required>
-                                    <option value="">-- Sélectionnez d'abord la promotion --</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Matière</label>
-                                <select name="subject_id" id="subject_id" class="form-select border-primary" disabled required>
-                                    <option value="">-- Sélectionnez d'abord la promotion --</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Enseignant</label>
-                                <select name="teacher_id" id="teacher_id" class="form-select border-primary" required>
-                                    <option value="">-- Choisissez un enseignant --</option>
-                                    @foreach($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}">{{ $teacher->name }} {{ $teacher->surname }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-md-4 d-flex align-items-end">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_principal" name="is_principal" value="1" style="width: 3em; height: 1.5em;">
-                                    <label class="form-check-label fw-bold" for="is_principal">Professeur Principal</label>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-                            <button type="submit" class="btn btn-primary me-md-2 rounded-pill">
-                                <i class="fas fa-save me-1"></i> Enregistrer
-                            </button>
-                            <button type="reset" class="btn btn-outline-secondary rounded-pill">
-                                <i class="fas fa-undo me-1"></i> Annuler
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card shadow-lg">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-list-check me-2"></i>Affectations existantes
-                    </h5>
-                </div>
-
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th width="20%">Classe</th>
-                                    <th width="25%">Matière</th>
-                                    <th width="25%">Enseignant</th>
-                                    <th width="15%">Professeur Principal</th>
-                                    <th width="15%">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="assignmentsTable">
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        <i class="fas fa-info-circle me-2"></i>Sélectionnez une classe pour afficher les affectations
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+    {{-- Formulaire --}}
+    <div class="dk-card">
+        <div class="dk-card-header">
+            <h5><i class="fas fa-plus-circle me-2" style="color:var(--accent)"></i>Nouvelle affectation</h5>
+        </div>
+        <div class="dk-card-body">
+            <form id="assignmentForm" method="POST" action="{{ route('teacher-assignments.store') }}">
+                @csrf
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label">Année</label>
+                        <select name="year_id" id="year_id" class="form-select" required>
+                            <option value="">— Choisir —</option>
+                            @foreach($years as $y)
+                                <option value="{{ $y->id }}">{{ $y->year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label">Filière</label>
+                        <select name="sector_id" id="sector_id" class="form-select" disabled required>
+                            <option value="">—</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label">Promotion</label>
+                        <select name="promotion_id" id="promotion_id" class="form-select" disabled required>
+                            <option value="">—</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label">Classe</label>
+                        <select name="classroom_id" id="classroom_id" class="form-select" disabled required>
+                            <option value="">—</option>
+                        </select>
                     </div>
                 </div>
-            </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label">Matière</label>
+                        <select name="subject_id" id="subject_id" class="form-select" disabled required>
+                            <option value="">—</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Enseignant</label>
+                        <select name="teacher_id" id="teacher_id" class="form-select" required>
+                            <option value="">— Choisir un enseignant —</option>
+                            @foreach($teachers as $t)
+                                <option value="{{ $t->id }}">{{ $t->name }} {{ $t->surname }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex justify-content-end gap-2">
+                        <button type="reset" class="btn-ghost-dk"><i class="fas fa-undo"></i></button>
+                        <button type="submit" id="submitBtn" class="btn-primary-dk">
+                            <i class="fas fa-save"></i> Sauvegarder
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Tableau --}}
+    <div class="dk-card">
+        <div class="dk-card-header">
+            <h5><i class="fas fa-list-ul me-2" style="color:var(--accent)"></i>Affectations existantes</h5>
+            <span id="classLabel" style="font-size:.78rem;color:var(--text-muted);"></span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="dk-table">
+                <thead>
+                    <tr>
+                        <th>Matière</th>
+                        <th>Enseignant</th>
+                        <th style="width:100px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="assignmentsTable">
+                    <tr><td colspan="3"><div class="empty-state"><i class="fas fa-school"></i><p>Sélectionnez une classe pour voir les affectations</p></div></td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Modal de confirmation -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+{{-- Modal suppression --}}
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirmation de suppression</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-size:.9rem;font-weight:700;">
+                    <i class="fas fa-exclamation-triangle me-2" style="color:var(--danger)"></i>Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir supprimer cette affectation ? Cette action est irréversible.</p>
+            <div class="modal-body" style="font-size:.875rem;color:var(--text-secondary);">
+                Voulez-vous vraiment retirer cette affectation ? Cette action est irréversible.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Annuler
-                </button>
-                <button type="button" class="btn btn-danger rounded-pill" id="confirmDelete">
-                    <i class="fas fa-trash me-1"></i> Confirmer
+                <button class="btn-ghost-dk" data-bs-dismiss="modal">Annuler</button>
+                <button id="confirmDelete" class="btn-danger-dk" style="padding:.5rem 1.2rem;border-radius:20px;">
+                    <i class="fas fa-trash"></i> Supprimer
                 </button>
             </div>
         </div>
@@ -149,384 +182,108 @@
 
 @section('another_JS')
 <script>
-   // Horloge en temps réel
-function updateClock() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateString = now.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    document.getElementById('liveClock').innerHTML = `<i class="fas fa-clock me-1"></i>${dateString} - ${timeString}`;
-}
-setInterval(updateClock, 1000);
-updateClock();
+// Horloge
+(function tick(){
+    document.getElementById('liveClock').textContent =
+        new Date().toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    setTimeout(tick,1000);
+})();
 
-// Éléments du DOM
-const yearSelect = document.getElementById('year_id');
-const sectorSelect = document.getElementById('sector_id');
-const promotionSelect = document.getElementById('promotion_id');
-const subjectSelect = document.getElementById('subject_id');
-const classroomSelect = document.getElementById('classroom_id');
-const assignmentsTable = document.getElementById('assignmentsTable');
-const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-const isPrincipalCheckbox = document.getElementById('is_principal');
-let assignmentToDelete = null;
+const $  = id => document.getElementById(id);
+const year  = $('year_id'), sector  = $('sector_id'), promo = $('promotion_id'),
+      room  = $('classroom_id'), subj = $('subject_id'), tbody = $('assignmentsTable');
+const confirmModal = new bootstrap.Modal($('confirmModal'));
+let deleteId = null;
 
-// Gestionnaires d'événements
-yearSelect.addEventListener('change', loadSectors);
-sectorSelect.addEventListener('change', loadPromotions);
-promotionSelect.addEventListener('change', () => {
-    loadSubjects();
-    loadClassrooms();
-});
-classroomSelect.addEventListener('change', loadAssignments);
+year.onchange  = loadSectors;
+sector.onchange = loadPromotions;
+promo.onchange  = () => { loadSubjects(); loadClassrooms(); };
+room.onchange   = loadAssignments;
 
-// Gestion de la soumission du formulaire
-document.getElementById('assignmentForm').addEventListener('submit', async function(e) {
+$('assignmentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-
-    // Préparation des données
-    const formData = new FormData(this);
-    // Convertir la checkbox en valeur booléenne
-    formData.set('is_principal', isPrincipalCheckbox.checked ? '1' : '0');
-
-    const submitBtn = this.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Enregistrement...';
-
-    try {
-        const response = await fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showAlert('success', data.message);
-            loadAssignments();
-            // Réinitialiser seulement les champs matière et enseignant
-            subjectSelect.value = '';
-            document.getElementById('teacher_id').value = '';
-            isPrincipalCheckbox.checked = false;
-        } else {
-            showAlert('danger', data.message);
-        }
-    } catch (error) {
-        showAlert('danger', 'Une erreur est survenue lors de l\'enregistrement');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Enregistrer';
-    }
+    const btn = $('submitBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    const res  = await fetch(this.action, { method:'POST', body:new FormData(this), headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'} });
+    const data = await res.json();
+    toast(data.success?'success':'danger', data.message);
+    if (data.success) { loadAssignments(); subj.value=''; $('teacher_id').value=''; }
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Sauvegarder';
 });
 
-// Gestion de la suppression
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.delete-assignment')) {
-        assignmentToDelete = e.target.closest('.delete-assignment').dataset.id;
-        confirmModal.show();
-    }
+document.addEventListener('click', e => {
+    if (e.target.closest('.del-btn')) { deleteId=e.target.closest('.del-btn').dataset.id; confirmModal.show(); }
 });
 
-document.getElementById('confirmDelete').addEventListener('click', async function() {
-    if (!assignmentToDelete) return;
+$('confirmDelete').onclick = async function() {
+    if (!deleteId) return;
+    this.disabled=true; this.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    const res  = await fetch(`/teacher-assignments/${deleteId}`, { method:'DELETE', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content} });
+    const data = await res.json();
+    if (data.success) { document.querySelector(`tr[data-id="${deleteId}"]`)?.remove(); toast('success',data.message); if(!tbody.querySelector('tr[data-id]')) empty('Aucune affectation pour cette classe.'); }
+    else toast('danger',data.message);
+    confirmModal.hide(); this.disabled=false; this.innerHTML='<i class="fas fa-trash"></i> Supprimer'; deleteId=null;
+};
 
-    const deleteBtn = this;
-    deleteBtn.disabled = true;
-    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Suppression...';
-
-    try {
-        const response = await fetch(`/teacher-assignments/${assignmentToDelete}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showAlert('success', data.message);
-            document.querySelector(`tr[data-id="${assignmentToDelete}"]`).remove();
-
-            // Si le tableau est vide, afficher un message
-            if (document.querySelectorAll('#assignmentsTable tr[data-id]').length === 0) {
-                assignmentsTable.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="fas fa-info-circle me-2"></i>Aucune affectation trouvée pour cette classe
-                        </td>
-                    </tr>
-                `;
-            }
-        } else {
-            showAlert('danger', data.message);
-        }
-    } catch (error) {
-        showAlert('danger', 'Une erreur est survenue lors de la suppression');
-    } finally {
-        confirmModal.hide();
-        deleteBtn.disabled = false;
-        deleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i> Confirmer';
-        assignmentToDelete = null;
-    }
-});
-
-// Gestion des professeurs principaux
-document.addEventListener('change', async function(e) {
-    if (e.target.classList.contains('set-principal')) {
-        const checkbox = e.target;
-        const assignmentId = checkbox.dataset.assignmentId;
-        const classroomId = classroomSelect.value;
-
-        if (!checkbox.checked) return;
-
-        checkbox.disabled = true;
-
-        try {
-            const response = await fetch('/teacher-assignments/set-principal', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    assignment_id: assignmentId,
-                    classroom_id: classroomId
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Décocher toutes les autres cases de cette classe
-                document.querySelectorAll('.set-principal').forEach(cb => {
-                    if (cb.dataset.assignmentId !== assignmentId) {
-                        cb.checked = false;
-                    }
-                });
-
-                showAlert('success', data.message);
-            } else {
-                checkbox.checked = false;
-                showAlert('danger', data.message);
-            }
-        } catch (error) {
-            showAlert('danger', 'Une erreur est survenue');
-            checkbox.checked = false;
-        } finally {
-            checkbox.disabled = false;
-        }
-    }
-});
-
-// Fonctions de chargement des données
-async function loadSectors() {
-    const yearId = yearSelect.value;
-    sectorSelect.innerHTML = '<option value="">Chargement...</option>';
-    sectorSelect.disabled = true;
-    promotionSelect.disabled = true;
-    classroomSelect.disabled = true;
-    subjectSelect.disabled = true;
-
-    try {
-        const response = await fetch(`/teacher-assignments/get-sectors/${yearId}`);
-        const sectors = await response.json();
-
-        let options = '<option value="">-- Choisissez une filière --</option>';
-        sectors.forEach(sector => {
-            options += `<option value="${sector.id}">${sector.name}</option>`;
-        });
-
-        sectorSelect.innerHTML = options;
-        sectorSelect.disabled = false;
-
-        // Réinitialiser les autres selects
-        promotionSelect.innerHTML = '<option value="">-- Sélectionnez d\'abord la filière --</option>';
-        classroomSelect.innerHTML = '<option value="">-- Sélectionnez d\'abord la promotion --</option>';
-        subjectSelect.innerHTML = '<option value="">-- Sélectionnez d\'abord la promotion --</option>';
-        assignmentsTable.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center text-muted py-4">
-                    <i class="fas fa-info-circle me-2"></i>Sélectionnez une classe pour afficher les affectations
-                </td>
-            </tr>
-        `;
-    } catch (error) {
-        showAlert('danger', 'Erreur lors du chargement des filières');
-        sectorSelect.innerHTML = '<option value="">-- Erreur de chargement --</option>';
-    }
+async function loadSectors(){
+    if(!year.value) return;
+    reset([sector,promo,room,subj]);
+    sector.innerHTML='<option>Chargement…</option>';
+    const d = await get(`/teacher-assignments/get-sectors/${year.value}`);
+    sector.innerHTML='<option value="">— Filière —</option>'+d.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    sector.disabled=false; empty('Sélectionnez une classe pour voir les affectations.');
 }
 
-async function loadPromotions() {
-    const yearId = yearSelect.value;
-    const sectorId = sectorSelect.value;
-    promotionSelect.innerHTML = '<option value="">Chargement...</option>';
-    promotionSelect.disabled = true;
-    classroomSelect.disabled = true;
-    subjectSelect.disabled = true;
-
-    try {
-        const response = await fetch(`/teacher-assignments/get-promotions/${yearId}/${sectorId}`);
-        const promotions = await response.json();
-
-        let options = '<option value="">-- Choisissez une promotion --</option>';
-        promotions.forEach(p => {
-            options += `<option value="${p.id}">${p.name}</option>`;
-        });
-
-        promotionSelect.innerHTML = options;
-        promotionSelect.disabled = false;
-
-        // Réinitialiser les autres selects
-        classroomSelect.innerHTML = '<option value="">-- Sélectionnez d\'abord la promotion --</option>';
-        subjectSelect.innerHTML = '<option value="">-- Sélectionnez d\'abord la promotion --</option>';
-    } catch (error) {
-        showAlert('danger', 'Erreur lors du chargement des promotions');
-        promotionSelect.innerHTML = '<option value="">-- Erreur de chargement --</option>';
-    }
+async function loadPromotions(){
+    if(!sector.value) return;
+    reset([promo,room,subj]);
+    promo.innerHTML='<option>Chargement…</option>';
+    const d = await get(`/teacher-assignments/get-promotions/${year.value}/${sector.value}`);
+    promo.innerHTML='<option value="">— Promotion —</option>'+d.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    promo.disabled=false;
 }
 
-async function loadSubjects() {
-    const yearId = yearSelect.value;
-    const sectorId = sectorSelect.value;
-    const promotionId = promotionSelect.value;
-    subjectSelect.innerHTML = '<option value="">Chargement...</option>';
-    subjectSelect.disabled = true;
-
-    try {
-        const response = await fetch(`/teacher-assignments/get-subjects/${yearId}/${sectorId}/${promotionId}`);
-        const subjects = await response.json();
-
-        let options = '<option value="">-- Choisissez une matière --</option>';
-        subjects.forEach(subject => {
-            options += `<option value="${subject.id}">${subject.name}</option>`;
-        });
-
-        subjectSelect.innerHTML = options;
-        subjectSelect.disabled = false;
-    } catch (error) {
-        showAlert('danger', 'Erreur lors du chargement des matières');
-        subjectSelect.innerHTML = '<option value="">-- Erreur de chargement --</option>';
-    }
+async function loadSubjects(){
+    subj.innerHTML='<option>Chargement…</option>'; subj.disabled=true;
+    const d = await get(`/teacher-assignments/get-subjects/${year.value}/${sector.value}/${promo.value}`);
+    subj.innerHTML='<option value="">— Matière —</option>'+d.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    subj.disabled=false;
 }
 
-async function loadClassrooms() {
-    const yearId = yearSelect.value;
-    const sectorId = sectorSelect.value;
-    const promotionId = promotionSelect.value;
-    classroomSelect.innerHTML = '<option value="">Chargement...</option>';
-    classroomSelect.disabled = true;
-
-    try {
-        const response = await fetch(`/teacher-assignments/get-classes/${yearId}/${sectorId}/${promotionId}`);
-        const classrooms = await response.json();
-
-        let options = '<option value="">-- Choisissez une classe --</option>';
-        classrooms.forEach(cls => {
-            options += `<option value="${cls.id}">${cls.name}</option>`;
-        });
-
-        classroomSelect.innerHTML = options;
-        classroomSelect.disabled = false;
-    } catch (error) {
-        showAlert('danger', 'Erreur lors du chargement des classes');
-        classroomSelect.innerHTML = '<option value="">-- Erreur de chargement --</option>';
-    }
+async function loadClassrooms(){
+    room.innerHTML='<option>Chargement…</option>'; room.disabled=true;
+    const d = await get(`/teacher-assignments/get-classes/${year.value}/${sector.value}/${promo.value}`);
+    room.innerHTML='<option value="">— Classe —</option>'+d.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    room.disabled=false;
 }
 
-async function loadAssignments() {
-    const yearId = yearSelect.value;
-    const classroomId = classroomSelect.value;
-
-    if (!yearId || !classroomId) return;
-
-    assignmentsTable.innerHTML = `
-        <tr>
-            <td colspan="5" class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Chargement...</span>
-                </div>
-            </td>
-        </tr>
-    `;
-
-    try {
-        const response = await fetch(`/teacher-assignments/get-assignments/${yearId}/${classroomId}`);
-        const data = await response.json();
-
-        if (data.length === 0) {
-            assignmentsTable.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
-                        <i class="fas fa-info-circle me-2"></i>Aucune affectation trouvée pour cette classe
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        let rows = '';
-        data.forEach(assignment => {
-            rows += `
-                <tr data-id="${assignment.id}">
-                    <td>${classroomSelect.options[classroomSelect.selectedIndex].text}</td>
-                    <td>${assignment.subject}</td>
-                    <td>${assignment.teacher}</td>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input set-principal" type="checkbox"
-                                data-assignment-id="${assignment.id}"
-                                ${assignment.is_principal ? 'checked' : ''}>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-danger delete-assignment"
-                                data-id="${assignment.id}"
-                                title="Supprimer cette affectation">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        assignmentsTable.innerHTML = rows;
-    } catch (error) {
-        assignmentsTable.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center text-danger py-4">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Erreur lors du chargement des affectations
-                </td>
-            </tr>
-        `;
-    }
+async function loadAssignments(){
+    if(!year.value||!room.value) return;
+    $('classLabel').textContent = room.options[room.selectedIndex]?.text??'';
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:2rem"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+    const data = await get(`/teacher-assignments/get-assignments/${year.value}/${room.value}`);
+    const list = data.assignments ?? [];
+    if(!list.length){ empty('Aucune affectation pour cette classe.'); return; }
+    tbody.innerHTML = list.map(a=>`
+        <tr data-id="${a.id}">
+            <td>${a.subject}</td>
+            <td>${a.teacher}</td>
+            <td><button class="btn-danger-dk del-btn" data-id="${a.id}"><i class="fas fa-times"></i> Retirer</button></td>
+        </tr>`).join('');
 }
 
-// Fonction pour afficher les alertes
-function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show mb-4`;
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+async function get(url){ try{ const r=await fetch(url); return await r.json(); }catch{ return []; } }
 
-    const alertContainer = document.getElementById('alertContainer');
-    alertContainer.innerHTML = '';
-    alertContainer.appendChild(alertDiv);
+function reset(selects){ selects.forEach(s=>{ s.innerHTML='<option value="">—</option>'; s.disabled=true; }); }
 
-    // Supprimer l'alerte après 5 secondes
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 5000);
+function empty(msg){ tbody.innerHTML=`<tr><td colspan="3"><div class="empty-state"><i class="fas fa-inbox"></i><p>${msg}</p></div></td></tr>`; }
+
+function toast(type, msg){
+    const d=document.createElement('div');
+    d.className=`dk-alert dk-alert-${type}`;
+    d.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-triangle'}"></i> ${msg}`;
+    const c=$('alertContainer'); c.innerHTML=''; c.appendChild(d);
+    setTimeout(()=>d.remove(),5000);
 }
 </script>
 @endsection

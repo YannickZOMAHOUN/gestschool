@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnseignantMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
    $middleware->alias([
         'role' => RoleMiddleware::class
     ]);
+    $middleware->alias(['enseignant.redirect' => EnseignantMiddleware::class]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
     })->create();
