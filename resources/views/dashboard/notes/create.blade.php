@@ -3,53 +3,87 @@
 @section('content')
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <div class="nm-root">
 
     {{-- ── TOPBAR ── --}}
     <header class="nm-topbar">
         <div class="nm-topbar-left">
-            <div class="nm-topbar-icon"><i class="fas fa-pen-nib"></i></div>
+            <div class="nm-topbar-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
             <div>
                 <h1 class="nm-title">Saisie des Notes</h1>
-                <p class="nm-subtitle">Sélectionnez un contexte pour commencer</p>
+                <p class="nm-subtitle">Lycée Technique de Bohicon — Système de gestion des évaluations</p>
             </div>
         </div>
         <div class="nm-topbar-right">
-            <div class="nm-stat-pill">
-                <i class="fas fa-users"></i>
+            <div class="nm-chip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
                 <span id="student-count">0</span> élève(s)
             </div>
-            <div class="nm-stat-pill nm-stat-success">
-                <i class="fas fa-check-circle"></i>
+            <div class="nm-chip nm-chip--success">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 <span id="saved-count">0</span> sauvegardé(s)
+            </div>
+            <div class="nm-chip nm-chip--warning" id="pending-chip" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="saved-pending-text">0</span> non sauvegardé(s)
             </div>
         </div>
     </header>
 
-    {{-- ── ZONE TOASTS ── --}}
-    <div class="nm-toast-area" id="toast-area"></div>
+    {{-- ── TOASTS ── --}}
+    <div class="nm-toast-zone" id="toast-area"></div>
 
-    {{-- ── BANDEAU VERROUILLÉ ── --}}
-    <div class="nm-locked-bar d-none" id="locked-banner">
-        <i class="fas fa-lock"></i>
-        <strong>Notes verrouillées</strong> — Consultation uniquement. Seul le censeur peut modifier.
+    {{-- ── BANNIÈRES ── --}}
+    <div class="nm-banner nm-banner--locked d-none" id="locked-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span><strong>Notes verrouillées</strong> — Consultation uniquement. Seul le censeur peut modifier.</span>
+    </div>
+    <div class="nm-banner nm-banner--info d-none" id="partial-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Les cases <strong>grisées avec cadenas</strong> ont déjà été enregistrées. Vous pouvez remplir les cases restantes.</span>
     </div>
 
-    {{-- ── BANDEAU INFO CHAMPS PARTIELS ── --}}
-    <div class="nm-partial-bar d-none" id="partial-banner">
-        <i class="fas fa-circle-info"></i>
-        <span>Les cases <strong>grisées</strong> <i class="fas fa-lock" style="font-size:.75rem"></i> ont déjà été enregistrées. Vous pouvez remplir les cases vides.</span>
-    </div>
+    {{-- ── PANNEAU DE FILTRES ── --}}
+    <section class="nm-panel">
+        <div class="nm-panel-header">
+            <div class="nm-panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Contexte de saisie
+            </div>
+            <div class="nm-step-track">
+                <div class="nm-step" id="step-1" data-active="true">
+                    <div class="nm-step-dot">1</div>
+                    <span>Année</span>
+                </div>
+                <div class="nm-step-line"></div>
+                <div class="nm-step" id="step-2">
+                    <div class="nm-step-dot">2</div>
+                    <span>Classe</span>
+                </div>
+                <div class="nm-step-line"></div>
+                <div class="nm-step" id="step-3">
+                    <div class="nm-step-dot">3</div>
+                    <span>Matière</span>
+                </div>
+                <div class="nm-step-line"></div>
+                <div class="nm-step" id="step-4">
+                    <div class="nm-step-dot">4</div>
+                    <span>Saisie</span>
+                </div>
+            </div>
+        </div>
 
-    {{-- ── PANNEAU FILTRES ── --}}
-    <section class="nm-filters-panel">
-
-        {{-- Ligne 1 : contexte scolaire --}}
-        <div class="nm-filters-row">
-            <div class="nm-filter-group">
-                <label class="nm-label"><i class="fas fa-calendar-alt"></i> Année scolaire</label>
+        <div class="nm-filters-grid">
+            {{-- Colonne 1 : Année --}}
+            <div class="nm-fg">
+                <label class="nm-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Année scolaire
+                </label>
                 <select id="year_id" class="nm-select">
                     <option value="">— Choisir —</option>
                     @foreach($years as $year)
@@ -57,192 +91,208 @@
                     @endforeach
                 </select>
             </div>
-            <div class="nm-filter-sep"><i class="fas fa-chevron-right"></i></div>
-            <div class="nm-filter-group">
-                <label class="nm-label"><i class="fas fa-layer-group"></i> Filière</label>
+
+            {{-- Colonne 2 : Filière --}}
+            <div class="nm-fg">
+                <label class="nm-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="6" height="18"/><rect x="9" y="8" width="6" height="13"/><rect x="16" y="5" width="6" height="16"/></svg>
+                    Filière
+                </label>
                 <select id="sector_id" class="nm-select" disabled>
                     <option value="">— Année d'abord —</option>
                 </select>
             </div>
-            <div class="nm-filter-sep"><i class="fas fa-chevron-right"></i></div>
-            <div class="nm-filter-group">
-                <label class="nm-label"><i class="fas fa-graduation-cap"></i> Promotion</label>
+
+            {{-- Colonne 3 : Promotion --}}
+            <div class="nm-fg">
+                <label class="nm-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    Promotion
+                </label>
                 <select id="promotion_id" class="nm-select" disabled>
                     <option value="">— Filière d'abord —</option>
                 </select>
             </div>
-            <div class="nm-filter-sep"><i class="fas fa-chevron-right"></i></div>
-            <div class="nm-filter-group">
-                <label class="nm-label"><i class="fas fa-door-open"></i> Classe</label>
+
+            {{-- Colonne 4 : Classe --}}
+            <div class="nm-fg">
+                <label class="nm-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Classe
+                </label>
                 <select id="classroom_id" class="nm-select" disabled>
                     <option value="">— Promotion d'abord —</option>
                 </select>
             </div>
         </div>
 
-        {{-- Ligne 2 : matière + semestre + action --}}
-        <div class="nm-filters-row nm-filters-row--secondary">
-            <div class="nm-filter-group nm-filter-group--wide">
-                <label class="nm-label"><i class="fas fa-book-open"></i> Matière</label>
-                <div class="nm-select-with-badge">
-                    <select id="subject_id" class="nm-select" disabled>
+        <div class="nm-divider"></div>
+
+        <div class="nm-filters-row2">
+            {{-- Semestre --}}
+            <div class="nm-fg nm-fg--sm">
+                <label class="nm-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+                    Semestre
+                </label>
+                <div class="nm-sem-toggle">
+                    <button type="button" class="nm-sem-btn nm-sem-btn--on" data-value="1">S1</button>
+                    <button type="button" class="nm-sem-btn" data-value="2">S2</button>
+                </div>
+                <input type="hidden" id="semester" value="1">
+            </div>
+
+            {{-- Matière --}}
+            <div class="nm-fg nm-fg--wide">
+                <label class="nm-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Matière
+                </label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <select id="subject_id" class="nm-select" disabled style="flex:1">
                         <option value="">— Classe d'abord —</option>
                     </select>
-                    <span class="nm-coeff-badge" id="coeff-badge" style="display:none;">
+                    <div class="nm-coeff-pill" id="coeff-pill" style="display:none;">
                         Coeff <strong id="coefficient">—</strong>
-                    </span>
+                    </div>
                 </div>
                 <input type="hidden" id="ratio_id">
                 <input type="hidden" id="subject_real_id">
             </div>
-            <div class="nm-filter-group">
-                <label class="nm-label"><i class="fas fa-layer-group"></i> Semestre</label>
-                <div class="nm-semester-toggle">
-                    <button type="button" class="nm-sem-btn nm-sem-btn--active" data-value="1">
-                        <span>S1</span><small>Semestre 1</small>
-                    </button>
-                    <button type="button" class="nm-sem-btn" data-value="2">
-                        <span>S2</span><small>Semestre 2</small>
-                    </button>
-                </div>
-                <input type="hidden" id="semester" value="1">
-            </div>
-            <div class="nm-filter-group nm-filter-group--action">
-                <label class="nm-label nm-label--invisible">Action</label>
-                <button id="btn-load" class="nm-btn-load" disabled>
-                    <i class="fas fa-bolt"></i>
+
+            {{-- Bouton charger --}}
+            <div class="nm-fg nm-fg--auto">
+                <label class="nm-label nm-label--ghost">Action</label>
+                <button id="btn-load" class="nm-btn-primary" disabled>
+                    <span class="btn-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    </span>
                     <span id="btn-load-text">Charger les notes</span>
-                    <div class="nm-btn-loader" id="btn-load-spinner" style="display:none;">
-                        <div class="nm-spinner"></div>
-                    </div>
+                    <div class="nm-spin" id="btn-load-spin" style="display:none;"></div>
                 </button>
             </div>
         </div>
 
         {{-- Barre de progression --}}
-        <div class="nm-progress-track" id="progress-track" style="display:none;">
-            <div class="nm-progress-fill" id="progress-fill"></div>
-            <span class="nm-progress-label" id="progress-label">0%</span>
+        <div class="nm-progress-wrap" id="progress-wrap" style="display:none;">
+            <div class="nm-progress-bar">
+                <div class="nm-progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="nm-progress-txt" id="progress-label">0%</span>
         </div>
     </section>
 
     {{-- ── RACCOURCIS ── --}}
-    <div class="nm-shortcuts" id="shortcuts-hint" style="display:none;">
-        <span class="nm-shortcut"><kbd>Tab</kbd> / <kbd>↵</kbd> Navigation</span>
-        <span class="nm-shortcut"><kbd>Ctrl</kbd> + <kbd>S</kbd> Sauvegarder</span>
-        <span class="nm-shortcut"><i class="fas fa-mouse"></i> Double-clic en-tête → moyenne colonne</span>
-        <span class="nm-shortcut"><i class="fas fa-hand-point-right"></i> Clic en-tête → remplir colonne</span>
-        <span class="nm-shortcut nm-shortcut--lock"><i class="fas fa-lock"></i> Case grisée = déjà enregistrée</span>
+    <div class="nm-shortcuts-bar" id="shortcuts-bar" style="display:none;">
+        <span class="sc-item"><kbd>Tab</kbd><kbd>↵</kbd> Navigation</span>
+        <span class="sc-item"><kbd>Ctrl</kbd><kbd>S</kbd> Sauvegarder</span>
+        <span class="sc-item sc-item--blue">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Case grisée = déjà enregistrée
+        </span>
+        <span class="sc-item">Clic en-tête → remplir colonne · Double-clic → moyenne colonne</span>
     </div>
 
     {{-- ── ÉTAT VIDE ── --}}
-    <div class="nm-empty-state" id="empty-state">
-        <div class="nm-empty-icon"><i class="fas fa-table"></i></div>
-        <h3>Aucune donnée</h3>
-        <p>Sélectionnez une année, filière, promotion, classe et matière,<br>puis cliquez sur <strong>Charger les notes</strong>.</p>
+    <div class="nm-empty" id="empty-state">
+        <div class="nm-empty-visual">
+            <div class="nm-empty-rings">
+                <div class="nm-ring nm-ring-1"></div>
+                <div class="nm-ring nm-ring-2"></div>
+                <div class="nm-ring nm-ring-3"></div>
+            </div>
+            <div class="nm-empty-icon-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/></svg>
+            </div>
+        </div>
+        <h3>Aucune donnée chargée</h3>
+        <p>Sélectionnez une année, une filière, une promotion, une classe et une matière,<br>puis cliquez sur <strong>Charger les notes</strong>.</p>
     </div>
 
-    {{-- ── TABLEAU ── --}}
-    <div class="nm-table-wrap" id="notes-table-container" style="display:none;">
+    {{-- ── TABLEAU PRINCIPAL ── --}}
+    <div class="nm-card" id="notes-table-container" style="display:none;">
 
-        <div class="nm-table-toolbar">
-            <div class="nm-toolbar-info">
-                Classe chargée — <span id="toolbar-subject">—</span>
-            </div>
-            <div class="nm-toolbar-actions">
-                <button class="nm-btn nm-btn--ghost" id="btn-reset">
-                    <i class="fas fa-rotate-left"></i> Réinitialiser
+        <div class="nm-card-header">
+            <div class="nm-card-title" id="toolbar-subject">—</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="nm-btn-ghost" id="btn-reset">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.85"/></svg>
+                    Réinitialiser
                 </button>
-                <button class="nm-btn nm-btn--primary" id="btn-save" disabled>
-                    <i class="fas fa-floppy-disk"></i> Enregistrer
-                    <span class="nm-save-count" id="save-pending-count" style="display:none;"></span>
+                <button class="nm-btn-save" id="btn-save" disabled>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Enregistrer
+                    <span class="nm-save-badge" id="save-pending-badge" style="display:none;"></span>
                 </button>
             </div>
         </div>
 
-        <div class="nm-table-scroll">
+        <div style="overflow-x:auto;">
             <table class="nm-table">
                 <thead>
                     <tr>
-                        <th class="nm-th nm-th--num">#</th>
-                        <th class="nm-th nm-th--name">Nom</th>
-                        <th class="nm-th nm-th--name">Prénom</th>
-                        <th class="nm-th nm-th--note interro-header" data-index="0">
-                            <div class="nm-col-header">
-                                <span>I1</span>
-                                <input type="number" class="nm-header-input" placeholder="—" min="0" max="20" step="0.01" title="Remplir toute la colonne · Double-clic = moyenne">
-                            </div>
+                        <th class="th-num">#</th>
+                        <th class="th-name" colspan="2">Élève</th>
+                        <th class="th-note interro-header" data-index="0">
+                            <div class="th-inner">I1<input type="number" class="nm-hdr-inp" placeholder="—" min="0" max="20" step="0.01" title="Entrer une valeur → remplir · Double-clic → moyenne"></div>
                         </th>
-                        <th class="nm-th nm-th--note interro-header" data-index="1">
-                            <div class="nm-col-header">
-                                <span>I2</span>
-                                <input type="number" class="nm-header-input" placeholder="—" min="0" max="20" step="0.01" title="Remplir toute la colonne · Double-clic = moyenne">
-                            </div>
+                        <th class="th-note interro-header" data-index="1">
+                            <div class="th-inner">I2<input type="number" class="nm-hdr-inp" placeholder="—" min="0" max="20" step="0.01"></div>
                         </th>
-                        <th class="nm-th nm-th--note interro-header" data-index="2">
-                            <div class="nm-col-header">
-                                <span>I3</span>
-                                <input type="number" class="nm-header-input" placeholder="—" min="0" max="20" step="0.01" title="Remplir toute la colonne · Double-clic = moyenne">
-                            </div>
+                        <th class="th-note interro-header" data-index="2">
+                            <div class="th-inner">I3<input type="number" class="nm-hdr-inp" placeholder="—" min="0" max="20" step="0.01"></div>
                         </th>
-                        <th class="nm-th nm-th--avg">
-                            <div class="nm-col-header">
-                                <span>Moy I</span>
-                                <small class="nm-auto-tag">auto</small>
-                            </div>
+                        <th class="th-avg">
+                            <div class="th-inner">Moy I<span class="th-auto">auto</span></div>
                         </th>
-                        <th class="nm-th nm-th--note devoir-header" data-field="devoir1">
-                            <div class="nm-col-header">
-                                <span>D1</span>
-                                <input type="number" class="nm-header-input" placeholder="—" min="0" max="20" step="0.01" title="Remplir toute la colonne · Double-clic = moyenne">
-                            </div>
+                        <th class="th-note devoir-header" data-field="devoir1">
+                            <div class="th-inner">D1<input type="number" class="nm-hdr-inp" placeholder="—" min="0" max="20" step="0.01"></div>
                         </th>
-                        <th class="nm-th nm-th--note devoir-header" data-field="devoir2">
-                            <div class="nm-col-header">
-                                <span>D2</span>
-                                <input type="number" class="nm-header-input" placeholder="—" min="0" max="20" step="0.01" title="Remplir toute la colonne · Double-clic = moyenne">
-                            </div>
+                        <th class="th-note devoir-header" data-field="devoir2">
+                            <div class="th-inner">D2<input type="number" class="nm-hdr-inp" placeholder="—" min="0" max="20" step="0.01"></div>
                         </th>
-                        <th class="nm-th nm-th--final">
-                            <div class="nm-col-header">
-                                <span>Moy /20</span>
-                                <small class="nm-auto-tag">auto</small>
-                            </div>
+                        <th class="th-final">
+                            <div class="th-inner">Moy /20<span class="th-auto">auto</span></div>
                         </th>
-                        <th class="nm-th nm-th--status"><i class="fas fa-circle-check"></i></th>
+                        <th class="th-status">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        </th>
                     </tr>
                 </thead>
                 <tbody id="notes-body"></tbody>
             </table>
         </div>
 
-        {{-- Footer stats temps réel --}}
-        <div class="nm-table-footer">
-            <div class="nm-footer-stats">
-                <div class="nm-footer-stat">
-                    <span class="nm-footer-val" id="stat-avg-class">—</span>
-                    <span class="nm-footer-key">Moy. classe</span>
-                </div>
-                <div class="nm-footer-divider"></div>
-                <div class="nm-footer-stat">
-                    <span class="nm-footer-val nm-footer-val--success" id="stat-pass">—</span>
-                    <span class="nm-footer-key">≥ 10</span>
-                </div>
-                <div class="nm-footer-divider"></div>
-                <div class="nm-footer-stat">
-                    <span class="nm-footer-val nm-footer-val--danger" id="stat-fail">—</span>
-                    <span class="nm-footer-key">< 10</span>
-                </div>
-                <div class="nm-footer-divider"></div>
-                <div class="nm-footer-stat">
-                    <span class="nm-footer-val" id="stat-max">—</span>
-                    <span class="nm-footer-key">Max</span>
-                </div>
-                <div class="nm-footer-divider"></div>
-                <div class="nm-footer-stat">
-                    <span class="nm-footer-val" id="stat-min">—</span>
-                    <span class="nm-footer-key">Min</span>
-                </div>
+        {{-- Stats footer --}}
+        <div class="nm-stats-bar">
+            <div class="nm-stat">
+                <span class="nm-stat-val" id="stat-avg">—</span>
+                <span class="nm-stat-key">Moy. classe</span>
+            </div>
+            <div class="nm-stat-sep"></div>
+            <div class="nm-stat">
+                <span class="nm-stat-val nm-stat-val--g" id="stat-pass">—</span>
+                <span class="nm-stat-key">≥ 10 (admis)</span>
+            </div>
+            <div class="nm-stat-sep"></div>
+            <div class="nm-stat">
+                <span class="nm-stat-val nm-stat-val--r" id="stat-fail">—</span>
+                <span class="nm-stat-key">< 10 (ajourné)</span>
+            </div>
+            <div class="nm-stat-sep"></div>
+            <div class="nm-stat">
+                <span class="nm-stat-val nm-stat-val--g" id="stat-max">—</span>
+                <span class="nm-stat-key">Meilleure</span>
+            </div>
+            <div class="nm-stat-sep"></div>
+            <div class="nm-stat">
+                <span class="nm-stat-val nm-stat-val--r" id="stat-min">—</span>
+                <span class="nm-stat-key">Plus faible</span>
+            </div>
+            <div class="nm-stat-sep"></div>
+            <div class="nm-stat">
+                <span class="nm-stat-val" id="stat-taux">—</span>
+                <span class="nm-stat-key">Taux réussite</span>
             </div>
         </div>
     </div>
@@ -253,1314 +303,973 @@
 
 @section('another_JS')
 <script>
+/* ═══════════════════════════════════════════════════════════
+   NotesManager v2
+═══════════════════════════════════════════════════════════ */
 class NotesManager {
     constructor() {
-        this.currentData      = null;
+        this.data             = null;
         this.canEdit          = true;
         this.canModify        = true;
+        this.saved            = new Set();
+        this.modified         = new Set();
         this.INTERRO_COUNT    = 3;
-        this.csrfToken        = '{{ csrf_token() }}';
-        this.savedStudents    = new Set();
-        this.modifiedStudents = new Set();
-        // Pas d'auto-save : seulement sur clic manuel
-
-        this._initElements();
-        this._bindFilters();
-        this._bindKeyboard();
+        this.csrf             = '{{ csrf_token() }}';
+        this._init();
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // HELPERS
-    // ══════════════════════════════════════════════════════════════════
+    /* ── Helpers ── */
+    trunc2(v)   { return Math.floor(v * 100) / 100; }
+    sid(id)     { return String(id); }
+    esc(s)      { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
 
-    trunc2(v)  { return Math.floor(v * 100) / 100; }
-    sid(id)    { return String(id); }
+    $ (id)      { return document.getElementById(id); }
+    $$ (sel)    { return document.querySelectorAll(sel); }
 
-    esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str ?? '';
-        return d.innerHTML;
-    }
-
-    toast(type, message, duration = 4500) {
-        const area  = document.getElementById('toast-area');
-        if (!area) return;
-        const icons = {
-            success : 'fa-circle-check',
-            error   : 'fa-circle-xmark',
-            warning : 'fa-triangle-exclamation',
-            info    : 'fa-circle-info',
-        };
+    /* ── Toasts ── */
+    toast(type, msg, dur = 4200) {
+        const icons = { success:'✓', error:'✗', warning:'⚠', info:'ℹ' };
         const t = document.createElement('div');
         t.className = `nm-toast nm-toast--${type}`;
-        t.innerHTML = `
-            <i class="fas ${icons[type] ?? icons.info}"></i>
-            <span>${message}</span>
-            <button onclick="this.parentElement.remove()"><i class="fas fa-xmark"></i></button>`;
-        area.appendChild(t);
-        requestAnimationFrame(() => t.classList.add('nm-toast--visible'));
-        if (duration > 0) {
-            setTimeout(() => {
-                t.classList.remove('nm-toast--visible');
-                setTimeout(() => t.remove(), 400);
-            }, duration);
-        }
+        t.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ'}</span><span>${msg}</span>
+            <button onclick="this.parentElement.remove()">×</button>`;
+        this.$('toast-area').appendChild(t);
+        requestAnimationFrame(() => t.classList.add('show'));
+        if (dur) setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, dur);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // INITIALISATION
-    // ══════════════════════════════════════════════════════════════════
-
-    _initElements() {
-        this.el = {
-            year          : document.getElementById('year_id'),
-            sector        : document.getElementById('sector_id'),
-            promotion     : document.getElementById('promotion_id'),
-            classroom     : document.getElementById('classroom_id'),
-            subject       : document.getElementById('subject_id'),
-            coefficient   : document.getElementById('coefficient'),
-            coeffBadge    : document.getElementById('coeff-badge'),
-            ratioId       : document.getElementById('ratio_id'),
-            subjectRealId : document.getElementById('subject_real_id'),
-            semester      : document.getElementById('semester'),
-            btnLoad       : document.getElementById('btn-load'),
-            btnLoadText   : document.getElementById('btn-load-text'),
-            btnLoadSpinner: document.getElementById('btn-load-spinner'),
-            btnSave       : document.getElementById('btn-save'),
-            btnReset      : document.getElementById('btn-reset'),
-            container     : document.getElementById('notes-table-container'),
-            tbody         : document.getElementById('notes-body'),
-            emptyState    : document.getElementById('empty-state'),
-            shortcutsHint : document.getElementById('shortcuts-hint'),
-            lockedBanner  : document.getElementById('locked-banner'),
-            partialBanner : document.getElementById('partial-banner'),
-            studentCount  : document.getElementById('student-count'),
-            savedCount    : document.getElementById('saved-count'),
-            savePending   : document.getElementById('save-pending-count'),
-            progressTrack : document.getElementById('progress-track'),
-            progressFill  : document.getElementById('progress-fill'),
-            progressLabel : document.getElementById('progress-label'),
-            toolbarSubject: document.getElementById('toolbar-subject'),
-        };
+    /* ── HTTP ── */
+    async get(url) {
+        const r = await fetch(url, { headers:{ 'Accept':'application/json','X-Requested-With':'XMLHttpRequest' } });
+        if (!r.ok) throw new Error((await r.json().catch(()=>({}))).message || `Erreur ${r.status}`);
+        return r.json();
     }
-
-    _bindFilters() {
-        this.el.year.addEventListener('change',      () => this._loadSectors());
-        this.el.sector.addEventListener('change',    () => this._loadPromotions());
-        this.el.promotion.addEventListener('change', () => this._loadClassrooms());
-        this.el.classroom.addEventListener('change', () => this._loadSubjects());
-        this.el.subject.addEventListener('change',   () => { this._updateCoefficient(); this._updateLoadBtn(); });
-        this.el.btnLoad.addEventListener('click',    () => this.loadNotes());
-        this.el.btnSave.addEventListener('click',    () => this.saveNotes());
-        this.el.btnReset.addEventListener('click',   () => this.resetForm());
-
-        document.querySelectorAll('.nm-sem-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.nm-sem-btn').forEach(b => b.classList.remove('nm-sem-btn--active'));
-                btn.classList.add('nm-sem-btn--active');
-                this.el.semester.value = btn.dataset.value;
-                this._updateLoadBtn();
-            });
+    async post(url, body) {
+        const r = await fetch(url, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','Accept':'application/json',
+                      'X-CSRF-TOKEN':this.csrf,'X-Requested-With':'XMLHttpRequest' },
+            body: JSON.stringify(body)
         });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok && j.message) throw new Error(j.message);
+        return j;
     }
 
-    _bindKeyboard() {
+    /* ── Init ── */
+    _init() {
+        this.$('year_id').addEventListener('change', () => this._loadSectors());
+        this.$('sector_id').addEventListener('change', () => this._loadPromotions());
+        this.$('promotion_id').addEventListener('change', () => this._loadClassrooms());
+        this.$('classroom_id').addEventListener('change', () => this._loadSubjects());
+        this.$('subject_id').addEventListener('change', () => { this._syncCoeff(); this._checkLoadBtn(); });
+        this.$('btn-load').addEventListener('click', () => this.loadNotes());
+        this.$('btn-save').addEventListener('click', () => this.saveNotes());
+        this.$('btn-reset').addEventListener('click', () => this.resetAll());
+
+        this.$$('.nm-sem-btn').forEach(b => b.addEventListener('click', () => {
+            this.$$('.nm-sem-btn').forEach(x => x.classList.remove('nm-sem-btn--on'));
+            b.classList.add('nm-sem-btn--on');
+            this.$('semester').value = b.dataset.value;
+            this._checkLoadBtn();
+            if (this.$('classroom_id').value) this._loadSubjects();
+        }));
+
         document.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                this.saveNotes();
-                return;
-            }
+            if (e.ctrlKey && e.key === 's') { e.preventDefault(); this.saveNotes(); return; }
             if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-                const active = document.activeElement;
-                if (active?.classList.contains('nm-note-input')) {
+                const a = document.activeElement;
+                if (a?.classList.contains('nm-inp')) {
                     e.preventDefault();
-                    const inputs = [...document.querySelectorAll('.nm-note-input:not(:disabled):not([readonly])')];
-                    const idx    = inputs.indexOf(active);
-                    if (idx < inputs.length - 1) inputs[idx + 1].focus();
-                    else this.el.btnSave.focus();
+                    const all = [...this.$$('.nm-inp:not(:disabled):not([readonly])')];
+                    const i   = all.indexOf(a);
+                    i < all.length - 1 ? all[i+1].focus() : this.$('btn-save').focus();
                 }
             }
         });
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // HTTP
-    // ══════════════════════════════════════════════════════════════════
-
-    async _get(url) {
-        const res = await fetch(url, {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        });
-        const ct = res.headers.get('content-type') ?? '';
-        if (!ct.includes('application/json')) {
-            if (res.status === 419) throw new Error('Session expirée — rechargez la page.');
-            throw new Error(`Erreur serveur (${res.status}).`);
-        }
-        if (!res.ok) {
-            const b = await res.json().catch(() => ({}));
-            throw new Error(b.message ?? `Erreur (${res.status})`);
-        }
-        return res.json();
-    }
-
-    async _post(url, body) {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type'     : 'application/json',
-                'Accept'           : 'application/json',
-                'X-CSRF-TOKEN'     : this.csrfToken,
-                'X-Requested-With' : 'XMLHttpRequest',
-            },
-            body: JSON.stringify(body),
-        });
-        const ct = res.headers.get('content-type') ?? '';
-        if (!ct.includes('application/json')) {
-            if (res.status === 419) throw new Error('Session expirée — rechargez la page.');
-            throw new Error(`Erreur serveur (${res.status}).`);
-        }
-        const json = await res.json();
-        if (!res.ok && json.message) throw new Error(json.message);
-        return json;
-    }
-
-    // ══════════════════════════════════════════════════════════════════
-    // SELECTS EN CASCADE
-    // ══════════════════════════════════════════════════════════════════
-
-    _setSelectLoading(sel) {
-        sel.innerHTML = '<option>Chargement…</option>';
-        sel.disabled  = true;
-    }
-
-    _populateSelect(sel, items, placeholder) {
-        sel.innerHTML = `<option value="">${placeholder}</option>`;
-        (items ?? []).forEach(item => {
-            const o       = document.createElement('option');
-            o.value       = item.id;
-            o.textContent = item.name ?? item.name_sector ?? item.promotion_sector ?? '—';
+    /* ── Selects ── */
+    _loading(sel) { sel.innerHTML='<option>Chargement…</option>'; sel.disabled=true; }
+    _fill(sel, items, ph) {
+        sel.innerHTML = `<option value="">${ph}</option>`;
+        (items||[]).forEach(it => {
+            const o = document.createElement('option');
+            o.value = it.id; o.textContent = it.name || it.name_sector || it.promotion_sector || '—';
             sel.appendChild(o);
         });
-        sel.disabled = (items ?? []).length === 0;
+        sel.disabled = !items?.length;
     }
-
-    _resetDownstream(from) {
-        const chains = {
-            year      : ['sector', 'promotion', 'classroom', 'subject'],
-            sector    : ['promotion', 'classroom', 'subject'],
-            promotion : ['classroom', 'subject'],
-            classroom : ['subject'],
-        };
-        const labels = {
-            sector    : '— Filière —',
-            promotion : '— Promotion —',
-            classroom : '— Classe —',
-            subject   : '— Matière —',
-        };
-        (chains[from] ?? []).forEach(key => {
-            if (!this.el[key]) return;
-            this.el[key].innerHTML = `<option value="">${labels[key] ?? '—'}</option>`;
-            this.el[key].disabled  = true;
+    _resetFrom(from) {
+        const chains = { year:['sector','promotion','classroom','subject'], sector:['promotion','classroom','subject'], promotion:['classroom','subject'], classroom:['subject'] };
+        const phs    = { sector:'— Filière —', promotion:'— Promotion —', classroom:'— Classe —', subject:'— Matière —' };
+        (chains[from]||[]).forEach(k => {
+            const el = this.$(k+'_id') || this.$(k === 'subject' ? 'subject_id' : null);
+            if (!el) return;
+            el.innerHTML = `<option value="">${phs[k]||'—'}</option>`;
+            el.disabled  = true;
         });
-        this._updateCoefficient();
-        this._clearTable();
-        this._updateLoadBtn();
+        this._syncCoeff(); this._clearTable(); this._checkLoadBtn();
+        this._updateSteps(1);
     }
 
     async _loadSectors() {
-        const yearId = this.el.year.value;
-        this._resetDownstream('year');
-        if (!yearId) return;
-        this._setSelectLoading(this.el.sector);
-        try {
-            const data = await this._get(`/api/sectors-by-year/${yearId}`);
-            this._populateSelect(this.el.sector, data, '— Choisir une filière —');
-        } catch (e) {
-            this.toast('error', e.message);
-            this.el.sector.innerHTML = '<option value="">— Erreur —</option>';
-        }
+        const y = this.$('year_id').value;
+        this._resetFrom('year');
+        if (!y) return;
+        this._loading(this.$('sector_id'));
+        try { this._fill(this.$('sector_id'), await this.get(`/api/sectors-by-year/${y}`), '— Choisir une filière —'); this._updateSteps(2); }
+        catch(e) { this.toast('error', e.message); }
     }
-
     async _loadPromotions() {
-        const yearId = this.el.year.value, sectorId = this.el.sector.value;
-        this._resetDownstream('sector');
-        if (!yearId || !sectorId) return;
-        this._setSelectLoading(this.el.promotion);
-        try {
-            const data = await this._get(`/api/promotions-by-year-sector/${yearId}/${sectorId}`);
-            this._populateSelect(this.el.promotion, data, '— Choisir une promotion —');
-        } catch (e) {
-            this.toast('error', e.message);
-            this.el.promotion.innerHTML = '<option value="">— Erreur —</option>';
-        }
+        const y=this.$('year_id').value, s=this.$('sector_id').value;
+        this._resetFrom('sector');
+        if (!y||!s) return;
+        this._loading(this.$('promotion_id'));
+        try { this._fill(this.$('promotion_id'), await this.get(`/api/promotions-by-year-sector/${y}/${s}`), '— Choisir une promotion —'); }
+        catch(e) { this.toast('error', e.message); }
     }
-
     async _loadClassrooms() {
-        const promotionId = this.el.promotion.value, yearId = this.el.year.value;
-        this._resetDownstream('promotion');
-        if (!promotionId) return;
-        this._setSelectLoading(this.el.classroom);
-        try {
-            const data = await this._get(`/api/classes-by-promotion/${promotionId}?year_id=${yearId}`);
-            this._populateSelect(this.el.classroom, data, '— Choisir une classe —');
-        } catch (e) {
-            this.toast('error', e.message);
-            this.el.classroom.innerHTML = '<option value="">— Erreur —</option>';
-        }
+        const p=this.$('promotion_id').value, y=this.$('year_id').value;
+        this._resetFrom('promotion');
+        if (!p) return;
+        this._loading(this.$('classroom_id'));
+        try { this._fill(this.$('classroom_id'), await this.get(`/api/classes-by-promotion/${p}?year_id=${y}`), '— Choisir une classe —'); }
+        catch(e) { this.toast('error', e.message); }
     }
-
     async _loadSubjects() {
-        const classroomId = this.el.classroom.value, yearId = this.el.year.value;
-        this._resetDownstream('classroom');
-        if (!classroomId || !yearId) return;
-        this._setSelectLoading(this.el.subject);
+        const cl=this.$('classroom_id').value, y=this.$('year_id').value, sem=this.$('semester').value;
+        this._resetFrom('classroom');
+        if (!cl||!y) return;
+        this._loading(this.$('subject_id'));
         try {
-            const data = await this._post('/api/subjects-by-classroom', {
-                classroom_id: classroomId,
-                year_id     : yearId,
-            });
-            this.el.subject.innerHTML = '<option value="">— Choisir une matière —</option>';
-            if (data.success && data.subjects?.length) {
-                data.subjects.forEach(s => {
-                    const o               = document.createElement('option');
-                    o.value               = s.ratio_id;
-                    o.textContent         = `${s.subject_name} (Coeff : ${s.coefficient})`;
+            const d = await this.post('/api/subjects-by-classroom', { classroom_id:cl, year_id:y, semester:sem?parseInt(sem):null });
+            this.$('subject_id').innerHTML = '<option value="">— Choisir une matière —</option>';
+            if (d.success && d.subjects?.length) {
+                d.subjects.forEach(s => {
+                    const o = document.createElement('option');
+                    o.value = s.ratio_id;
                     o.dataset.coefficient = s.coefficient;
                     o.dataset.subjectId   = s.subject_id;
-                    this.el.subject.appendChild(o);
+                    const sl = s.semester===1?' [S1]':s.semester===2?' [S2]':'';
+                    o.textContent = `${s.subject_name}${sl}  —  Coeff. ${s.coefficient}`;
+                    this.$('subject_id').appendChild(o);
                 });
-                this.el.subject.disabled = false;
+                this.$('subject_id').disabled = false;
+                this._updateSteps(3);
             } else {
-                this.toast('warning', data.message ?? 'Aucune matière disponible.');
-                this.el.subject.innerHTML = '<option value="">— Aucune matière —</option>';
+                this.toast('warning', d.message || 'Aucune matière disponible pour ce semestre.');
             }
-        } catch (e) {
-            this.toast('error', e.message);
-            this.el.subject.innerHTML = '<option value="">— Erreur —</option>';
-        }
-        this._updateLoadBtn();
+        } catch(e) { this.toast('error', e.message); }
+        this._checkLoadBtn();
     }
-
-    _updateCoefficient() {
-        const opt = this.el.subject.options[this.el.subject.selectedIndex];
-        if (opt?.value) {
-            this.el.coefficient.textContent  = opt.dataset.coefficient ?? '1';
-            this.el.ratioId.value            = opt.value;
-            this.el.subjectRealId.value      = opt.dataset.subjectId ?? '';
-            this.el.coeffBadge.style.display = 'flex';
+    _syncCoeff() {
+        const o = this.$('subject_id').options[this.$('subject_id').selectedIndex];
+        if (o?.value) {
+            this.$('coefficient').textContent = o.dataset.coefficient || '1';
+            this.$('ratio_id').value          = o.value;
+            this.$('subject_real_id').value   = o.dataset.subjectId || '';
+            this.$('coeff-pill').style.display = 'flex';
         } else {
-            this.el.coefficient.textContent  = '—';
-            this.el.ratioId.value            = '';
-            this.el.subjectRealId.value      = '';
-            this.el.coeffBadge.style.display = 'none';
+            this.$('ratio_id').value = '';
+            this.$('coeff-pill').style.display = 'none';
         }
     }
-
-    _updateLoadBtn() {
-        this.el.btnLoad.disabled = !(
-            this.el.classroom.value &&
-            this.el.subject.value   &&
-            this.el.semester.value
+    _checkLoadBtn() {
+        this.$('btn-load').disabled = !(
+            this.$('classroom_id').value && this.$('subject_id').value && this.$('semester').value
         );
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // ÉTAT VIDE / CLEAR
-    // ══════════════════════════════════════════════════════════════════
-
-    _clearTable() {
-        this.currentData = null;
-        this.canEdit     = true;
-        this.canModify   = true;
-        this.savedStudents.clear();
-        this.modifiedStudents.clear();
-
-        if (this.el.tbody)         this.el.tbody.innerHTML             = '';
-        if (this.el.container)     this.el.container.style.display     = 'none';
-        if (this.el.emptyState)    this.el.emptyState.style.display    = 'flex';
-        if (this.el.shortcutsHint) this.el.shortcutsHint.style.display = 'none';
-        if (this.el.progressTrack) this.el.progressTrack.style.display = 'none';
-        if (this.el.lockedBanner)  this.el.lockedBanner.classList.add('d-none');
-        if (this.el.partialBanner) this.el.partialBanner.classList.add('d-none');
-        if (this.el.btnSave)       this.el.btnSave.disabled            = true;
-        if (this.el.studentCount)  this.el.studentCount.textContent    = '0';
-        if (this.el.savedCount)    this.el.savedCount.textContent      = '0';
-        this._updateSavePendingBadge();
-        this._updateFooterStats();
+    /* ── Step tracker ── */
+    _updateSteps(active) {
+        for (let i = 1; i <= 4; i++) {
+            const el = this.$(`step-${i}`);
+            if (!el) continue;
+            el.classList.toggle('step-done',   i < active);
+            el.classList.toggle('step-active', i === active);
+        }
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // CHARGEMENT DES NOTES
-    // ══════════════════════════════════════════════════════════════════
+    /* ── Clear table ── */
+    _clearTable() {
+        this.data = null; this.canEdit = true; this.canModify = true;
+        this.saved.clear(); this.modified.clear();
+        this.$('notes-body').innerHTML = '';
+        this.$('notes-table-container').style.display = 'none';
+        this.$('empty-state').style.display            = 'flex';
+        this.$('shortcuts-bar').style.display          = 'none';
+        this.$('progress-wrap').style.display          = 'none';
+        this.$('locked-banner').classList.add('d-none');
+        this.$('partial-banner').classList.add('d-none');
+        this.$('btn-save').disabled = true;
+        this.$('student-count').textContent = '0';
+        this.$('saved-count').textContent   = '0';
+        this.$('pending-chip').style.display = 'none';
+        this._updateStats();
+    }
 
+    /* ── Load notes ── */
     async loadNotes() {
-        const classroomId = this.el.classroom.value;
-        const yearId      = this.el.year.value;
-        const ratioId     = this.el.ratioId.value;
-        const semester    = this.el.semester.value;
+        const cl=this.$('classroom_id').value, y=this.$('year_id').value,
+              r=this.$('ratio_id').value, s=this.$('semester').value;
+        if (!cl||!y||!r||!s) { this.toast('warning','Veuillez remplir tous les champs.'); return; }
 
-        if (!classroomId || !yearId || !ratioId || !semester) {
-            this.toast('warning', 'Veuillez remplir tous les champs.');
-            return;
-        }
-
-        this.el.btnLoad.disabled             = true;
-        this.el.btnLoadText.textContent      = 'Chargement…';
-        this.el.btnLoadSpinner.style.display = 'flex';
+        const btn = this.$('btn-load');
+        btn.disabled = true;
+        this.$('btn-load-text').textContent = 'Chargement…';
+        this.$('btn-load-spin').style.display = 'block';
 
         try {
-            const data = await this._post('/api/students-with-notes', {
-                year_id      : yearId,
-                classroom_id : classroomId,
-                ratio_id     : ratioId,
-                semester,
-            });
+            const d = await this.post('/api/students-with-notes', { year_id:y, classroom_id:cl, ratio_id:r, semester:s });
+            if (d.success) {
+                this.data = d.students; this.canEdit = d.can_edit??true; this.canModify = d.can_modify??true;
+                this.saved.clear(); this.modified.clear();
+                d.is_locked
+                    ? this.$('locked-banner').classList.remove('d-none')
+                    : this.$('locked-banner').classList.add('d-none');
 
-            if (data.success) {
-                this.currentData = data.students;
-                this.canEdit     = data.can_edit   ?? true;
-                this.canModify   = data.can_modify ?? true;
-                this.savedStudents.clear();
-                this.modifiedStudents.clear();
+                const partial = d.students.some(s => Object.values(s.fields_readonly||{}).some(v=>v));
+                (partial && !d.is_locked)
+                    ? this.$('partial-banner').classList.remove('d-none')
+                    : this.$('partial-banner').classList.add('d-none');
 
-                data.is_locked
-                    ? this.el.lockedBanner.classList.remove('d-none')
-                    : this.el.lockedBanner.classList.add('d-none');
-
-                // Bandeau partiel : si au moins un champ est readonly sans que tout soit bloqué
-                const hasPartial = data.students.some(s => {
-                    const fr = s.fields_readonly ?? {};
-                    const vals = Object.values(fr);
-                    return vals.some(v => v) && !vals.every(v => v);
-                });
-                const hasAnyLocked = data.students.some(s =>
-                    Object.values(s.fields_readonly ?? {}).some(v => v)
-                );
-                if (hasAnyLocked && !data.is_locked) {
-                    this.el.partialBanner.classList.remove('d-none');
-                } else {
-                    this.el.partialBanner.classList.add('d-none');
-                }
-
-                const subjectLabel = this.el.subject.options[this.el.subject.selectedIndex]?.text ?? '—';
-                if (this.el.toolbarSubject) this.el.toolbarSubject.textContent = subjectLabel;
-
-                this._renderTable();
-                this.toast('success', `${data.students.length} élève(s) chargé(s).`);
+                const lbl = this.$('subject_id').options[this.$('subject_id').selectedIndex]?.text || '—';
+                this.$('toolbar-subject').textContent = '✎  ' + lbl;
+                this._render();
+                this._updateSteps(4);
+                this.toast('success', `${d.students.length} élève(s) chargé(s) avec succès.`);
             } else {
-                this.toast('warning', data.message ?? 'Aucun étudiant trouvé.');
+                this.toast('warning', d.message || 'Aucun étudiant trouvé.');
             }
-        } catch (e) {
-            this.toast('error', e.message);
-        } finally {
-            this.el.btnLoadText.textContent      = 'Charger les notes';
-            this.el.btnLoadSpinner.style.display = 'none';
-            this._updateLoadBtn();
+        } catch(e) { this.toast('error', e.message); }
+        finally {
+            this.$('btn-load-text').textContent = 'Charger les notes';
+            this.$('btn-load-spin').style.display = 'none';
+            this._checkLoadBtn();
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // RENDU DU TABLEAU — verrouillage champ par champ
-    // ══════════════════════════════════════════════════════════════════
+    /* ── Render ── */
+    _render() {
+        if (!this.data?.length) { this._clearTable(); return; }
+        this.$('empty-state').style.display = 'none';
+        this.$('notes-table-container').style.display = 'block';
+        this.$('shortcuts-bar').style.display = 'flex';
+        this.$('student-count').textContent = this.data.length;
+        this.$('progress-wrap').style.display = 'flex';
 
-    _renderTable() {
-        if (!this.currentData?.length) {
-            this._clearTable();
-            return;
-        }
+        const rows = this.data.map((s, i) => {
+            const interros  = s.interros || [];
+            const disabled  = s.is_disabled || !this.canEdit;
+            const fr        = s.fields_readonly || {};
 
-        this.el.emptyState.style.display    = 'none';
-        this.el.container.style.display     = 'block';
-        this.el.shortcutsHint.style.display = 'flex';
-        this.el.studentCount.textContent    = this.currentData.length;
-        this.el.progressTrack.style.display = 'flex';
-
-        const rows = this.currentData.map((s, idx) => {
-            const interros      = s.interros ?? [];
-            const isDisabled    = s.is_disabled || !this.canEdit;
-            const fr            = s.fields_readonly ?? {}; // par champ depuis l'API
-
-            // Cellules interros — chaque case potentiellement indépendante
-            let interroCells = '';
-            for (let i = 0; i < this.INTERRO_COUNT; i++) {
-                const fieldLocked = isDisabled ? false : (fr[`interro_${i}`] ?? false);
-                const attr        = isDisabled ? 'disabled' : fieldLocked ? 'readonly' : '';
-                const cellCls     = fieldLocked ? 'nm-cell--locked' : '';
-                const val         = interros[i] !== undefined && interros[i] !== null
-                    ? this.trunc2(parseFloat(interros[i])).toFixed(2) : '';
-                const lockTip     = fieldLocked ? ' title="Note enregistrée — non modifiable"' : '';
-                interroCells += `
-                    <td class="${cellCls}">
-                        <div class="nm-input-wrap${fieldLocked ? ' nm-input-wrap--locked' : ''}">
-                            <input type="number"
-                                   class="nm-note-input"
-                                   data-index="${idx}"
-                                   data-interro-index="${i}"
-                                   data-id="${s.recording_id}"
-                                   value="${val}"
-                                   min="0" max="20" step="0.01"
-                                   placeholder="—"
-                                   ${attr}${lockTip}>
-                            ${fieldLocked ? '<i class="fas fa-lock nm-field-lock-icon"></i>' : ''}
-                        </div>
-                    </td>`;
+            /* Interros */
+            let iCells = '';
+            for (let k = 0; k < this.INTERRO_COUNT; k++) {
+                const locked = disabled ? false : (fr[`interro_${k}`] || false);
+                const attr   = disabled ? 'disabled' : locked ? 'readonly' : '';
+                const val    = (interros[k] !== undefined && interros[k] !== null)
+                    ? this.trunc2(parseFloat(interros[k])).toFixed(2) : '';
+                iCells += `<td class="${locked?'td-locked':''}">
+                    <div class="inp-wrap${locked?' inp-wrap--lock':''}">
+                        <input type="number" class="nm-inp" data-idx="${i}" data-ii="${k}"
+                               data-id="${s.recording_id}" value="${val}"
+                               min="0" max="20" step="0.01" placeholder="—" ${attr}${locked?' title="Note enregistrée"':''}>
+                        ${locked?'<span class="inp-lock-ico">🔒</span>':''}
+                    </div>
+                </td>`;
             }
 
-            const moyI = s.moy_interros != null
-                ? this.trunc2(parseFloat(s.moy_interros)).toFixed(2) : '—';
+            const moyI = s.moy_interros != null ? this.trunc2(parseFloat(s.moy_interros)).toFixed(2) : '—';
 
-            // Cellules devoirs
-            let devoirCells = '';
-            ['devoir1', 'devoir2'].forEach(f => {
-                const fieldLocked = isDisabled ? false : (fr[f] ?? false);
-                const attr        = isDisabled ? 'disabled' : fieldLocked ? 'readonly' : '';
-                const cellCls     = fieldLocked ? 'nm-cell--locked' : '';
-                const val         = s[f] != null ? this.trunc2(parseFloat(s[f])).toFixed(2) : '';
-                const lockTip     = fieldLocked ? ' title="Note enregistrée — non modifiable"' : '';
-                devoirCells += `
-                    <td class="${cellCls}">
-                        <div class="nm-input-wrap${fieldLocked ? ' nm-input-wrap--locked' : ''}">
-                            <input type="number"
-                                   class="nm-note-input"
-                                   data-field="${f}"
-                                   data-index="${idx}"
-                                   data-id="${s.recording_id}"
-                                   value="${val}"
-                                   min="0" max="20" step="0.01"
-                                   placeholder="—"
-                                   ${attr}${lockTip}>
-                            ${fieldLocked ? '<i class="fas fa-lock nm-field-lock-icon"></i>' : ''}
-                        </div>
-                    </td>`;
+            /* Devoirs */
+            let dCells = '';
+            ['devoir1','devoir2'].forEach(f => {
+                const locked = disabled ? false : (fr[f] || false);
+                const attr   = disabled ? 'disabled' : locked ? 'readonly' : '';
+                const val    = s[f] != null ? this.trunc2(parseFloat(s[f])).toFixed(2) : '';
+                dCells += `<td class="${locked?'td-locked':''}">
+                    <div class="inp-wrap${locked?' inp-wrap--lock':''}">
+                        <input type="number" class="nm-inp" data-field="${f}" data-idx="${i}"
+                               data-id="${s.recording_id}" value="${val}"
+                               min="0" max="20" step="0.01" placeholder="—" ${attr}${locked?' title="Note enregistrée"':''}>
+                        ${locked?'<span class="inp-lock-ico">🔒</span>':''}
+                    </div>
+                </td>`;
             });
 
-            const moy20    = s.moy_20 != null ? this.trunc2(parseFloat(s.moy_20)) : null;
-            const moy20Str = moy20 != null ? moy20.toFixed(2) : '—';
-            const moy20Cls = moy20 == null ? '' : moy20 >= 10 ? 'nm-avg--pass' : 'nm-avg--fail';
+            const moy20 = s.moy_20 != null ? this.trunc2(parseFloat(s.moy_20)) : null;
+            const m20s  = moy20 != null ? moy20.toFixed(2) : '—';
+            const m20c  = moy20==null?'':moy20>=10?'moy-pass':'moy-fail';
 
-            // Statut de ligne
-            const allLocked    = s.field_readonly ?? false; // tout verrouillé
-            const someEditable = !isDisabled && !allLocked;
-            const statusCls    = allLocked ? 'nm-status--locked fa-lock' : 'nm-status--pending fa-circle';
-            const statusIcon   = `<i class="fas ${statusCls} nm-status-icon" data-index="${idx}"></i>`;
-            const rowCls       = allLocked ? 'nm-row nm-row--readonly' : 'nm-row';
+            const statusCls = s.field_readonly ? 'st-locked' : 'st-pending';
+            const partial   = Object.values(fr).some(v=>v);
 
-            // Indicateur cadenas sur le nom si au moins un champ est readonly
-            const hasAnyLocked = Object.values(fr).some(v => v);
-            const lockBadge    = hasAnyLocked
-                ? `<span class="nm-partial-lock" title="Certaines notes déjà enregistrées"><i class="fas fa-lock-open"></i></span>`
-                : '';
-
-            return `
-                <tr class="${rowCls}" data-index="${idx}" data-id="${s.recording_id}">
-                    <td class="nm-td--num">${idx + 1}</td>
-                    <td class="nm-td--name"><span>${this.esc(s.name)}</span>${lockBadge}</td>
-                    <td class="nm-td--name">${this.esc(s.surname)}</td>
-                    ${interroCells}
-                    <td>
-                        <span class="nm-avg-badge" data-type="moy-interro" data-index="${idx}">${moyI}</span>
-                    </td>
-                    ${devoirCells}
-                    <td>
-                        <span class="nm-avg-final ${moy20Cls}" data-type="moy-20" data-index="${idx}">${moy20Str}</span>
-                    </td>
-                    <td class="nm-td--status">${statusIcon}</td>
-                </tr>`;
+            return `<tr class="nm-row${s.field_readonly?' nm-row--lock':''}" data-idx="${i}" data-id="${s.recording_id}">
+                <td class="td-num">${i+1}</td>
+                <td class="td-name">${this.esc(s.name)}${partial?'<span class="partial-badge" title="Notes partiellement enregistrées">~</span>':''}</td>
+                <td class="td-name td-surname">${this.esc(s.surname)}</td>
+                ${iCells}
+                <td><span class="nm-moy" data-type="mi" data-idx="${i}">${moyI}</span></td>
+                ${dCells}
+                <td><span class="nm-moy-final ${m20c}" data-type="m20" data-idx="${i}">${m20s}</span></td>
+                <td class="td-status"><span class="nm-status ${statusCls}" data-idx="${i}"></span></td>
+            </tr>`;
         });
+        this.$('notes-body').innerHTML = rows.join('');
 
-        this.el.tbody.innerHTML = rows.join('');
+        const hasEditable = this.canEdit && this.data.some(s => !s.is_disabled && !s.field_readonly);
+        this.$('btn-save').disabled = !hasEditable;
 
-        // Le bouton save est actif s'il existe au moins un champ éditable non désactivé
-        const hasEditable = this.canEdit && this.currentData.some(s =>
-            !s.is_disabled && !s.field_readonly
-        );
-        this.el.btnSave.disabled = !hasEditable;
-
-        this._bindInputEvents();
-        this._bindHeaderEvents();
-        this._updateFooterStats();
-        this._updateProgressBar();
+        this._bindInputs();
+        this._bindHeaders();
+        this._updateStats();
+        this._updateProgress();
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // ÉVÉNEMENTS INPUTS
-    // ══════════════════════════════════════════════════════════════════
-
-    _bindInputEvents() {
-        this.el.tbody.querySelectorAll('.nm-note-input').forEach(inp => {
-            inp.addEventListener('input', () => this._recalculate(inp));
-            inp.addEventListener('blur',  () => this._formatInput(inp));
+    /* ── Events ── */
+    _bindInputs() {
+        this.$('notes-body').querySelectorAll('.nm-inp').forEach(inp => {
+            inp.addEventListener('input', () => this._recalc(inp));
+            inp.addEventListener('blur',  () => this._fmt(inp));
             inp.addEventListener('focus', () => inp.select());
         });
     }
-
-    _bindHeaderEvents() {
-        document.querySelectorAll('.nm-header-input').forEach(inp => {
+    _bindHeaders() {
+        this.$$('.nm-hdr-inp').forEach(inp => {
             inp.addEventListener('blur',     () => this._applyHeader(inp));
-            inp.addEventListener('dblclick', () => this._fillWithAverage(inp));
-            inp.addEventListener('keydown',  e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
+            inp.addEventListener('dblclick', () => this._fillAvg(inp));
+            inp.addEventListener('keydown',  e => { if (e.key==='Enter') { e.preventDefault(); inp.blur(); } });
         });
     }
-
-    _applyHeader(header) {
-        const raw = header.value.trim();
-        if (!raw) return;
-        const value = parseFloat(raw);
-        if (isNaN(value) || value < 0 || value > 20) return;
-
-        const th = header.closest('th');
+    _applyHeader(h) {
+        const v = parseFloat(h.value.trim()); if (isNaN(v)||v<0||v>20) return;
+        const th = h.closest('th');
         if (th.classList.contains('interro-header')) {
-            const i = th.dataset.index;
-            this.el.tbody.querySelectorAll(`.nm-note-input[data-interro-index="${i}"]:not(:disabled):not([readonly])`)
-                .forEach(inp => { inp.value = this.trunc2(value).toFixed(2); this._recalculate(inp); });
+            this.$('notes-body').querySelectorAll(`.nm-inp[data-ii="${th.dataset.index}"]:not(:disabled):not([readonly])`)
+                .forEach(inp => { inp.value = this.trunc2(v).toFixed(2); this._recalc(inp); });
         } else if (th.classList.contains('devoir-header')) {
-            const field = th.dataset.field;
-            this.el.tbody.querySelectorAll(`.nm-note-input[data-field="${field}"]:not(:disabled):not([readonly])`)
-                .forEach(inp => { inp.value = this.trunc2(value).toFixed(2); this._recalculate(inp); });
+            this.$('notes-body').querySelectorAll(`.nm-inp[data-field="${th.dataset.field}"]:not(:disabled):not([readonly])`)
+                .forEach(inp => { inp.value = this.trunc2(v).toFixed(2); this._recalc(inp); });
         }
-        this.toast('info', `Colonne remplie avec ${value.toFixed(2)}`);
+        this.toast('info', `Colonne remplie avec ${v.toFixed(2)}`);
     }
-
-    _fillWithAverage(header) {
-        const th = header.closest('th');
-        let selector = '';
-        if (th.classList.contains('interro-header')) {
-            selector = `.nm-note-input[data-interro-index="${th.dataset.index}"]:not(:disabled):not([readonly])`;
-        } else if (th.classList.contains('devoir-header')) {
-            selector = `.nm-note-input[data-field="${th.dataset.field}"]:not(:disabled):not([readonly])`;
-        }
-        if (!selector) return;
-
-        const vals = [...this.el.tbody.querySelectorAll(selector)]
-            .map(i => parseFloat(i.value)).filter(v => !isNaN(v));
+    _fillAvg(h) {
+        const th = h.closest('th');
+        let sel = '';
+        if (th.classList.contains('interro-header')) sel = `.nm-inp[data-ii="${th.dataset.index}"]:not(:disabled):not([readonly])`;
+        else if (th.classList.contains('devoir-header')) sel = `.nm-inp[data-field="${th.dataset.field}"]:not(:disabled):not([readonly])`;
+        if (!sel) return;
+        const vals = [...this.$('notes-body').querySelectorAll(sel)].map(i=>parseFloat(i.value)).filter(v=>!isNaN(v));
         if (!vals.length) return;
-        const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-        this.el.tbody.querySelectorAll(selector)
-            .forEach(inp => { inp.value = avg.toFixed(2); this._recalculate(inp); });
-        this.toast('success', `Colonne remplie avec la moyenne (${avg.toFixed(2)})`);
+        const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+        this.$('notes-body').querySelectorAll(sel).forEach(inp => { inp.value=avg.toFixed(2); this._recalc(inp); });
+        this.toast('success', `Moyenne colonne appliquée : ${avg.toFixed(2)}`);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // RECALCUL EN TEMPS RÉEL
-    // ══════════════════════════════════════════════════════════════════
-
-    _recalculate(changedInput) {
-        if (changedInput.hasAttribute('readonly')) return;
-
-        const idx = parseInt(changedInput.dataset.index);
-        const row = this.el.tbody.querySelector(`tr[data-index="${idx}"]`);
+    /* ── Recalcul ── */
+    _recalc(inp) {
+        if (inp.hasAttribute('readonly')) return;
+        const idx = parseInt(inp.dataset.idx);
+        const row = this.$('notes-body').querySelector(`tr[data-idx="${idx}"]`);
         if (!row) return;
+        const sid = this.sid(inp.dataset.id);
+        this.modified.add(sid); this.saved.delete(sid);
+        row.classList.add('nm-row--mod'); row.classList.remove('nm-row--saved');
+        const st = row.querySelector('.nm-status');
+        if (st && !st.classList.contains('st-locked')) { st.className='nm-status st-mod'; }
 
-        const studentId = this.sid(changedInput.dataset.id);
-        this.modifiedStudents.add(studentId);
-        this.savedStudents.delete(studentId);
-
-        row.classList.remove('nm-row--saved');
-        row.classList.add('nm-row--modified');
-
-        const icon = row.querySelector('.nm-status-icon');
-        if (icon && !icon.classList.contains('nm-status--locked')) {
-            icon.className = 'fas fa-circle-half-stroke nm-status-icon nm-status--modified';
-        }
-
-        // Calcul interros : on inclut aussi les champs readonly (valeurs déjà enregistrées)
         const interros = [];
-        for (let i = 0; i < this.INTERRO_COUNT; i++) {
-            const inp = row.querySelector(`.nm-note-input[data-interro-index="${i}"]`);
-            if (inp && inp.value !== '' && !inp.disabled) {
-                const v = parseFloat(inp.value);
-                if (!isNaN(v)) interros.push(v);
-            }
+        for (let k=0;k<this.INTERRO_COUNT;k++) {
+            const i = row.querySelector(`.nm-inp[data-ii="${k}"]`);
+            if (i && i.value!=='' && !i.disabled) { const v=parseFloat(i.value); if (!isNaN(v)) interros.push(v); }
         }
+        const gD = f => { const i=row.querySelector(`.nm-inp[data-field="${f}"]`); if(!i||i.value===''||i.disabled)return null; const v=parseFloat(i.value); return isNaN(v)?null:v; };
+        const d1=gD('devoir1'), d2=gD('devoir2');
+        const moyI = interros.length ? this.trunc2(interros.reduce((a,b)=>a+b,0)/interros.length) : null;
+        const comp = [moyI,d1,d2].filter(v=>v!==null);
+        const moy20 = comp.length ? this.trunc2(comp.reduce((a,b)=>a+b,0)/comp.length) : null;
 
-        const getD = f => {
-            const inp = row.querySelector(`.nm-note-input[data-field="${f}"]`);
-            if (!inp || inp.value === '' || inp.disabled) return null;
-            const v = parseFloat(inp.value);
-            return isNaN(v) ? null : v;
-        };
-        const d1 = getD('devoir1');
-        const d2 = getD('devoir2');
-
-        const moyI = interros.length
-            ? this.trunc2(interros.reduce((a, b) => a + b, 0) / interros.length)
-            : null;
-
-        const composantes = [moyI, d1, d2].filter(v => v !== null);
-        const moy20 = composantes.length
-            ? this.trunc2(composantes.reduce((a, b) => a + b, 0) / composantes.length)
-            : null;
-
-        const moyISpan = row.querySelector('[data-type="moy-interro"]');
-        if (moyISpan) moyISpan.textContent = moyI !== null ? moyI.toFixed(2) : '—';
-
-        const moy20Span = row.querySelector('[data-type="moy-20"]');
-        if (moy20Span) {
-            moy20Span.textContent = moy20 !== null ? moy20.toFixed(2) : '—';
-            moy20Span.className = 'nm-avg-final' +
-                (moy20 === null ? '' : moy20 >= 10 ? ' nm-avg--pass' : ' nm-avg--fail');
+        const miEl = row.querySelector('[data-type="mi"]');
+        if (miEl) miEl.textContent = moyI!==null?moyI.toFixed(2):'—';
+        const m20El = row.querySelector('[data-type="m20"]');
+        if (m20El) {
+            m20El.textContent = moy20!==null?moy20.toFixed(2):'—';
+            m20El.className   = 'nm-moy-final'+(moy20===null?'':moy20>=10?' moy-pass':' moy-fail');
         }
+        if (this.data[idx]) Object.assign(this.data[idx], { interros, devoir1:d1, devoir2:d2, moy_interros:moyI, moy_20:moy20 });
 
-        if (this.currentData[idx]) {
-            // On ne met à jour que les champs modifiés (pas les readonly)
-            const fr = this.currentData[idx].fields_readonly ?? {};
-            const newInterros = [];
-            for (let i = 0; i < this.INTERRO_COUNT; i++) {
-                const inp = row.querySelector(`.nm-note-input[data-interro-index="${i}"]`);
-                if (inp && inp.value !== '' && !inp.disabled) {
-                    newInterros.push(parseFloat(inp.value));
-                }
-            }
-            Object.assign(this.currentData[idx], {
-                interros,
-                devoir1     : d1,
-                devoir2     : d2,
-                moy_interros: moyI,
-                moy_20      : moy20,
-            });
-        }
-
-        // Activer le bouton save dès qu'il y a une modification
-        if (this.modifiedStudents.size > 0 && this.canEdit) {
-            this.el.btnSave.disabled = false;
-        }
-
-        this._updateSavePendingBadge();
-        this._updateFooterStats();
-        this._updateProgressBar();
+        if (this.modified.size>0 && this.canEdit) this.$('btn-save').disabled = false;
+        this._updatePendingChip();
+        this._updateStats();
+        this._updateProgress();
     }
-
-    _formatInput(input) {
-        if (input.value !== '' && !input.disabled && !input.readOnly) {
-            const v = parseFloat(input.value);
-            if (!isNaN(v)) {
-                input.value = this.trunc2(Math.min(Math.max(v, 0), 20)).toFixed(2);
-            }
+    _fmt(inp) {
+        if (inp.value!==''&&!inp.disabled&&!inp.readOnly) {
+            const v=parseFloat(inp.value);
+            if (!isNaN(v)) inp.value = this.trunc2(Math.min(Math.max(v,0),20)).toFixed(2);
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // SAUVEGARDE — Manuel uniquement, pas d'auto-save
-    // ══════════════════════════════════════════════════════════════════
-
+    /* ── Save ── */
     async saveNotes() {
-        if (!this.canEdit) {
-            this.toast('warning', 'Notes verrouillées — modification impossible.');
-            return;
-        }
-        if (!this.currentData?.length || this.modifiedStudents.size === 0) {
-            this.toast('info', 'Aucune modification à sauvegarder.');
-            return;
-        }
+        if (!this.canEdit) { this.toast('warning','Notes verrouillées.'); return; }
+        if (!this.data?.length||!this.modified.size) { this.toast('info','Aucune modification à sauvegarder.'); return; }
 
-        const modifiedData = this.currentData.filter(
-            s => this.modifiedStudents.has(this.sid(s.recording_id))
-        );
-        if (!modifiedData.length) return;
+        const modData = this.data.filter(s => this.modified.has(this.sid(s.recording_id)));
+        if (!modData.length) return;
 
-        // On n'envoie que les champs non-readonly (champs que l'enseignant a modifiés)
-        const notes = modifiedData.map(s => {
-            const fr = s.fields_readonly ?? {};
-            const row = this.el.tbody.querySelector(`tr[data-id="${s.recording_id}"]`);
-
-            // Interros : on envoie toutes les valeurs visibles (y compris readonly)
-            // Le backend se charge de ne pas écraser les cases déjà en BDD
+        const notes = modData.map(s => {
+            const row = this.$('notes-body').querySelector(`tr[data-id="${s.recording_id}"]`);
             const interros = [];
-            for (let i = 0; i < this.INTERRO_COUNT; i++) {
-                const inp = row?.querySelector(`.nm-note-input[data-interro-index="${i}"]`);
-                if (inp && inp.value !== '' && !inp.disabled) {
-                    interros.push(parseFloat(inp.value));
-                } else {
-                    interros.push(null); // placeholder pour garder les index
-                }
+            for (let k=0;k<this.INTERRO_COUNT;k++) {
+                const inp = row?.querySelector(`.nm-inp[data-ii="${k}"]`);
+                interros.push((inp && inp.value!=='' && !inp.disabled) ? parseFloat(inp.value) : null);
             }
-
-            const d1inp = row?.querySelector('.nm-note-input[data-field="devoir1"]');
-            const d2inp = row?.querySelector('.nm-note-input[data-field="devoir2"]');
-
+            const d1i = row?.querySelector('.nm-inp[data-field="devoir1"]');
+            const d2i = row?.querySelector('.nm-inp[data-field="devoir2"]');
             return {
-                recording_id : s.recording_id,
-                interros     : interros,
-                devoir1      : d1inp && d1inp.value !== '' && !d1inp.disabled ? parseFloat(d1inp.value) : null,
-                devoir2      : d2inp && d2inp.value !== '' && !d2inp.disabled ? parseFloat(d2inp.value) : null,
+                recording_id: s.recording_id, interros,
+                devoir1: (d1i&&d1i.value!==''&&!d1i.disabled)?parseFloat(d1i.value):null,
+                devoir2: (d2i&&d2i.value!==''&&!d2i.disabled)?parseFloat(d2i.value):null,
             };
         });
 
         const payload = {
-            year_id      : this.el.year.value,
-            classroom_id : this.el.classroom.value,
-            ratio_id     : this.el.ratioId.value,
-            semester     : this.el.semester.value,
-            notes,
+            year_id:this.$('year_id').value, classroom_id:this.$('classroom_id').value,
+            ratio_id:this.$('ratio_id').value, semester:this.$('semester').value, notes,
         };
 
-        const origHTML            = this.el.btnSave.innerHTML;
-        this.el.btnSave.innerHTML = '<div class="nm-spinner nm-spinner--sm"></div> Sauvegarde…';
-        this.el.btnSave.disabled  = true;
+        const btn = this.$('btn-save');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<div class="nm-spin nm-spin--sm"></div> Sauvegarde…';
+        btn.disabled  = true;
 
         try {
-            const data = await this._post('/api/notes/bulk', payload);
-
-            if (data.success) {
-                modifiedData.forEach(s => {
+            const d = await this.post('/api/notes/bulk', payload);
+            if (d.success) {
+                modData.forEach(s => {
                     const id  = this.sid(s.recording_id);
-                    this.savedStudents.add(id);
-                    this.modifiedStudents.delete(id);
-
-                    const row = this.el.tbody.querySelector(`tr[data-id="${s.recording_id}"]`);
+                    this.saved.add(id); this.modified.delete(id);
+                    const row = this.$('notes-body').querySelector(`tr[data-id="${s.recording_id}"]`);
                     if (row) {
-                        row.classList.remove('nm-row--modified');
-                        row.classList.add('nm-row--saved');
-                        const icon = row.querySelector('.nm-status-icon');
-                        if (icon && !icon.classList.contains('nm-status--locked')) {
-                            icon.className = 'fas fa-circle-check nm-status-icon nm-status--saved';
-                        }
+                        row.classList.remove('nm-row--mod'); row.classList.add('nm-row--saved');
+                        const st = row.querySelector('.nm-status');
+                        if (st && !st.classList.contains('st-locked')) st.className='nm-status st-saved';
                     }
                 });
-
-                if (this.el.savedCount) this.el.savedCount.textContent = this.savedStudents.size;
-                this._updateSavePendingBadge();
-                this._updateFooterStats();
-                this._updateProgressBar();
-                this.toast('success', `${modifiedData.length} note(s) enregistrée(s).`);
-
-                // Réinitialiser si tout est sauvegardé
-                const allDone = this.currentData.every(s =>
-                    this.savedStudents.has(this.sid(s.recording_id)) ||
-                    s.is_disabled ||
-                    s.field_readonly
-                );
-                if (allDone) {
-                    setTimeout(() => this._resetAfterSave(), 900);
-                }
+                this.$('saved-count').textContent = this.saved.size;
+                this._updatePendingChip();
+                this._updateProgress();
+                this._updateStats();
+                this.toast('success', `${modData.length} note(s) enregistrée(s) avec succès.`);
+                const allDone = this.data.every(s => this.saved.has(this.sid(s.recording_id))||s.is_disabled||s.field_readonly);
+                if (allDone) setTimeout(() => this._afterSave(), 900);
             } else {
-                this.toast('warning', data.message ?? 'Échec de la sauvegarde.');
+                this.toast('warning', d.message || 'Échec de la sauvegarde.');
             }
-        } catch (e) {
-            this.toast('error', e.message);
-        } finally {
-            this.el.btnSave.innerHTML = origHTML;
-            // Réactiver le bouton seulement s'il reste des modifs en attente
-            this.el.btnSave.disabled = !this.canEdit || this.modifiedStudents.size === 0;
+        } catch(e) { this.toast('error', e.message); }
+        finally {
+            btn.innerHTML = orig;
+            btn.disabled  = !this.canEdit || !this.modified.size;
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // RÉINITIALISATION POST-SAUVEGARDE
-    // ══════════════════════════════════════════════════════════════════
-
-    _resetAfterSave() {
-        if (this.el.subject) {
-            this.el.subject.value = '';
-            this._updateCoefficient();
-        }
-        if (this.el.container)     this.el.container.style.display     = 'none';
-        if (this.el.emptyState)    this.el.emptyState.style.display    = 'flex';
-        if (this.el.shortcutsHint) this.el.shortcutsHint.style.display = 'none';
-        if (this.el.progressTrack) this.el.progressTrack.style.display = 'none';
-        if (this.el.partialBanner) this.el.partialBanner.classList.add('d-none');
-
-        document.querySelectorAll('.nm-header-input').forEach(inp => { inp.value = ''; });
-
-        this.currentData = null;
-        this.savedStudents.clear();
-        this.modifiedStudents.clear();
-        if (this.el.studentCount) this.el.studentCount.textContent = '0';
-        if (this.el.savedCount)   this.el.savedCount.textContent   = '0';
-        this._updateSavePendingBadge();
-        this._updateFooterStats();
-        this._updateLoadBtn();
-
-        this.toast('info', 'Prêt pour une nouvelle saisie.', 3000);
+    _afterSave() {
+        this.$('subject_id').value = ''; this._syncCoeff();
+        this.$('notes-table-container').style.display='none';
+        this.$('empty-state').style.display='flex';
+        this.$('shortcuts-bar').style.display='none';
+        this.$('progress-wrap').style.display='none';
+        this.$('partial-banner').classList.add('d-none');
+        this.$$('.nm-hdr-inp').forEach(i=>i.value='');
+        this.data=null; this.saved.clear(); this.modified.clear();
+        this.$('student-count').textContent='0'; this.$('saved-count').textContent='0';
+        this._updatePendingChip(); this._updateStats(); this._checkLoadBtn();
+        this._updateSteps(3);
+        this.toast('info','Prêt pour une nouvelle saisie.', 3000);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // STATS & UI
-    // ══════════════════════════════════════════════════════════════════
-
-    _updateProgressBar() {
-        const total   = this.currentData?.length ?? 0;
-        const percent = total ? Math.round(this.savedStudents.size / total * 100) : 0;
-        if (this.el.progressFill)  this.el.progressFill.style.width  = `${percent}%`;
-        if (this.el.progressLabel) this.el.progressLabel.textContent = `${percent}%`;
+    /* ── UI utils ── */
+    _updateProgress() {
+        const total=this.data?.length||0;
+        const pct = total?Math.round(this.saved.size/total*100):0;
+        this.$('progress-fill').style.width = pct+'%';
+        this.$('progress-label').textContent = pct+'%';
+    }
+    _updatePendingChip() {
+        const n = this.modified.size;
+        const ch = this.$('pending-chip');
+        if (n>0) { this.$('saved-pending-text').textContent=n; ch.style.display='flex'; }
+        else ch.style.display='none';
+        const b = this.$('save-pending-badge');
+        if (b) { n>0?(b.textContent=n,b.style.display='flex'):(b.style.display='none'); }
+    }
+    _updateStats() {
+        const notes = (this.data||[]).map(s=>s.moy_20).filter(v=>v!=null&&!isNaN(v)).map(v=>parseFloat(v));
+        const set = (id, v) => { const e=this.$(id); if(e)e.textContent=v; };
+        if (!notes.length) { ['stat-avg','stat-pass','stat-fail','stat-max','stat-min','stat-taux'].forEach(id=>set(id,'—')); return; }
+        const avg  = this.trunc2(notes.reduce((a,b)=>a+b,0)/notes.length);
+        const pass = notes.filter(v=>v>=10).length;
+        set('stat-avg',  avg.toFixed(2));
+        set('stat-pass', pass);
+        set('stat-fail', notes.length-pass);
+        set('stat-max',  Math.max(...notes).toFixed(2));
+        set('stat-min',  Math.min(...notes).toFixed(2));
+        set('stat-taux', (pass/notes.length*100).toFixed(1)+'%');
     }
 
-    _updateSavePendingBadge() {
-        const n = this.modifiedStudents.size;
-        if (!this.el.savePending) return;
-        if (n > 0) {
-            this.el.savePending.textContent   = n;
-            this.el.savePending.style.display = 'inline-flex';
-        } else {
-            this.el.savePending.style.display = 'none';
-        }
-    }
-
-    _updateFooterStats() {
-        const notes = (this.currentData ?? [])
-            .map(s => s.moy_20)
-            .filter(v => v != null && !isNaN(v))
-            .map(v => parseFloat(v));
-
-        const setEl = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-        };
-
-        if (!notes.length) {
-            ['stat-avg-class','stat-pass','stat-fail','stat-max','stat-min']
-                .forEach(id => setEl(id, '—'));
-            return;
-        }
-
-        const avg = this.trunc2(notes.reduce((a, b) => a + b, 0) / notes.length);
-        setEl('stat-avg-class', avg.toFixed(2));
-        setEl('stat-pass',      notes.filter(v => v >= 10).length);
-        setEl('stat-fail',      notes.filter(v => v < 10).length);
-        setEl('stat-max',       Math.max(...notes).toFixed(2));
-        setEl('stat-min',       Math.min(...notes).toFixed(2));
-    }
-
-    // ══════════════════════════════════════════════════════════════════
-    // RESET FORMULAIRE COMPLET
-    // ══════════════════════════════════════════════════════════════════
-
-    resetForm() {
-        this.el.year.value     = '';
-        this.el.semester.value = '1';
-        document.querySelectorAll('.nm-sem-btn').forEach((b, i) =>
-            b.classList.toggle('nm-sem-btn--active', i === 0)
-        );
-        this._resetDownstream('year');
-        this.toast('info', 'Formulaire réinitialisé.');
+    resetAll() {
+        this.$('year_id').value = '';
+        this.$('semester').value = '1';
+        this.$$('.nm-sem-btn').forEach((b,i) => b.classList.toggle('nm-sem-btn--on',i===0));
+        this._resetFrom('year');
+        this._updateSteps(1);
+        this.toast('info','Formulaire réinitialisé.');
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    window.notesManager = new NotesManager();
-});
+document.addEventListener('DOMContentLoaded', () => { window.nm = new NotesManager(); });
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
-
-/* ════════════════════════════════════════════════════════════
-   TOKENS
-════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   TOKENS & BASE
+════════════════════════════════════════════════════════ */
 :root {
-    --c-bg:          #f0f2f5;
-    --c-surface:     #ffffff;
-    --c-surface-2:   #f7f8fa;
-    --c-border:      #e2e6eb;
-    --c-border-2:    #d1d8e0;
-    --c-text:        #1a1d23;
-    --c-text-2:      #5a6072;
-    --c-text-3:      #9aa0ae;
-    --c-primary:     #3b5bdb;
-    --c-primary-h:   #2f4bc0;
-    --c-primary-10:  rgba(59,91,219,.10);
-    --c-primary-20:  rgba(59,91,219,.20);
-    --c-success:     #2f9e44;
-    --c-success-bg:  #ebfbee;
-    --c-danger:      #c92a2a;
-    --c-danger-bg:   #fff5f5;
-    --c-warning:     #e67700;
-    --c-warning-bg:  #fff9db;
-    --c-locked-bg:   #f1f3f9;
-    --c-locked-bd:   #c8d0e0;
-    --c-modified-bg: #fffbe6;
-    --c-saved-bg:    #f0fdf4;
-    --f-sans:        'DM Sans', system-ui, sans-serif;
-    --f-mono:        'DM Mono', 'Fira Mono', monospace;
-    --radius:        10px;
-    --radius-lg:     16px;
-    --shadow:        0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
-    --shadow-md:     0 4px 16px rgba(0,0,0,.10);
-    --shadow-lg:     0 8px 32px rgba(0,0,0,.12);
-    --transition:    .18s cubic-bezier(.4,0,.2,1);
+    /* Couleurs */
+    --bg:          #f0f2f6;
+    --surface:     #ffffff;
+    --s2:          #f7f8fc;
+    --s3:          #eef0f6;
+    --border:      #dde1ea;
+    --border2:     #c8cdd9;
+    --text:        #141622;
+    --text2:       #4b5068;
+    --text3:       #8c92a8;
+    --blue:        #1d4ed8;
+    --blue-h:      #1839b8;
+    --blue-10:     rgba(29,78,216,.10);
+    --blue-20:     rgba(29,78,216,.20);
+    --green:       #15803d;
+    --green-bg:    #dcfce7;
+    --red:         #b91c1c;
+    --red-bg:      #fee2e2;
+    --amber:       #b45309;
+    --amber-bg:    #fef3c7;
+    --locked-bg:   #f1f2f7;
+    --locked-bd:   #bec5d9;
+    --mod-bg:      #fffbeb;
+    --saved-bg:    #f0fdf4;
+
+    /* Typography */
+    --ff:          'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono:        'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Misc */
+    --r:           10px;
+    --rl:          16px;
+    --sh:          0 1px 3px rgba(0,0,0,.07), 0 4px 14px rgba(0,0,0,.05);
+    --shd:         0 4px 20px rgba(0,0,0,.10);
+    --t:           .18s cubic-bezier(.4,0,.2,1);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ════════════════════════════════════════════════════════════
-   ROOT
-════════════════════════════════════════════════════════════ */
+/* ── Root ── */
 .nm-root {
-    font-family: var(--f-sans);
-    background: var(--c-bg);
+    font-family: var(--ff);
+    background: var(--bg);
     min-height: 100vh;
-    color: var(--c-text);
+    color: var(--text);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-/* ════════════════════════════════════════════════════════════
-   TOPBAR
-════════════════════════════════════════════════════════════ */
+/* ── Topbar ── */
 .nm-topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--c-surface); border: 1px solid var(--c-border);
-    border-radius: var(--radius-lg); padding: 1rem 1.5rem;
-    box-shadow: var(--shadow); flex-wrap: wrap; gap: .75rem;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--rl); padding: 1rem 1.5rem; box-shadow: var(--sh);
 }
-.nm-topbar-left { display: flex; align-items: center; gap: 1rem; }
+.nm-topbar-left { display: flex; align-items: center; gap: .9rem; }
 .nm-topbar-icon {
     width: 44px; height: 44px; border-radius: 12px;
-    background: var(--c-primary); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--blue), #3b82f6);
+    color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(29,78,216,.35);
 }
-.nm-title    { font-size: 1.2rem; font-weight: 700; color: var(--c-text); }
-.nm-subtitle { font-size: .82rem; color: var(--c-text-3); margin-top: 1px; }
-.nm-topbar-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.nm-stat-pill {
-    display: inline-flex; align-items: center; gap: .4rem;
-    padding: .35rem .75rem;
-    background: var(--c-surface-2); border: 1px solid var(--c-border);
-    border-radius: 99px; font-size: .82rem; font-weight: 500; color: var(--c-text-2);
+.nm-title    { font-size: 1.15rem; font-weight: 800; letter-spacing: -.3px; }
+.nm-subtitle { font-size: .78rem; color: var(--text3); margin-top: 2px; }
+.nm-topbar-right { display: flex; gap: .5rem; flex-wrap: wrap; }
+.nm-chip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .3rem .75rem; border-radius: 99px; font-size: .78rem; font-weight: 600;
+    background: var(--s2); border: 1px solid var(--border); color: var(--text2);
+    transition: all var(--t);
 }
-.nm-stat-pill i { font-size: .75rem; }
-.nm-stat-success { background: var(--c-success-bg); border-color: #b2f2bb; color: var(--c-success); }
+.nm-chip--success { background: var(--green-bg); border-color: #86efac; color: var(--green); }
+.nm-chip--warning { background: var(--amber-bg); border-color: #fcd34d; color: var(--amber); }
 
-/* ════════════════════════════════════════════════════════════
-   TOASTS
-════════════════════════════════════════════════════════════ */
-.nm-toast-area {
-    position: fixed; top: 1.25rem; right: 1.25rem; z-index: 9999;
-    display: flex; flex-direction: column; gap: .5rem; pointer-events: none;
+/* ── Toasts ── */
+.nm-toast-zone {
+    position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+    display: flex; flex-direction: column; gap: .4rem; pointer-events: none;
 }
 .nm-toast {
-    display: flex; align-items: center; gap: .75rem;
-    background: var(--c-surface); border-radius: var(--radius);
-    border-left: 4px solid var(--c-border);
-    padding: .75rem 1rem; box-shadow: var(--shadow-lg);
-    min-width: 280px; max-width: 380px;
-    font-size: .875rem; font-weight: 500;
-    pointer-events: all;
-    opacity: 0; transform: translateX(24px);
-    transition: opacity .3s, transform .3s;
+    display: flex; align-items: center; gap: .6rem; pointer-events: all;
+    background: var(--surface); border-radius: var(--r); border-left: 4px solid var(--border);
+    padding: .7rem 1rem; box-shadow: var(--shd); font-size: .85rem; font-weight: 500;
+    max-width: 360px; min-width: 260px;
+    opacity: 0; transform: translateX(20px); transition: all .3s;
 }
-.nm-toast--visible   { opacity: 1; transform: translateX(0); }
-.nm-toast--success   { border-color: var(--c-success); }
-.nm-toast--success i { color: var(--c-success); }
-.nm-toast--error     { border-color: var(--c-danger); }
-.nm-toast--error   i { color: var(--c-danger); }
-.nm-toast--warning   { border-color: var(--c-warning); }
-.nm-toast--warning i { color: var(--c-warning); }
-.nm-toast--info      { border-color: var(--c-primary); }
-.nm-toast--info    i { color: var(--c-primary); }
-.nm-toast span       { flex: 1; color: var(--c-text); }
-.nm-toast button     { background: none; border: none; cursor: pointer; color: var(--c-text-3); padding: 0; font-size: 1rem; }
+.nm-toast.show { opacity: 1; transform: translateX(0); }
+.nm-toast--success { border-color: var(--green); }
+.nm-toast--success .toast-icon { color: var(--green); }
+.nm-toast--error   { border-color: var(--red); }
+.nm-toast--error   .toast-icon { color: var(--red); }
+.nm-toast--warning { border-color: var(--amber); }
+.nm-toast--warning .toast-icon { color: var(--amber); }
+.nm-toast--info    { border-color: var(--blue); }
+.nm-toast--info    .toast-icon { color: var(--blue); }
+.nm-toast span:not(.toast-icon) { flex: 1; color: var(--text); }
+.nm-toast button { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 1.1rem; padding: 0; }
+.toast-icon { font-size: 1rem; font-weight: 700; flex-shrink: 0; }
 
-/* ════════════════════════════════════════════════════════════
-   BANDEAUX
-════════════════════════════════════════════════════════════ */
-.nm-locked-bar {
-    display: flex; align-items: center; gap: .5rem;
-    background: var(--c-warning-bg); border: 1px solid #ffe066;
-    border-radius: var(--radius); padding: .75rem 1.25rem;
-    color: var(--c-warning); font-size: .875rem;
+/* ── Bannières ── */
+.nm-banner {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .75rem 1.25rem; border-radius: var(--r); font-size: .85rem;
 }
-.nm-partial-bar {
-    display: flex; align-items: center; gap: .5rem;
-    background: #e7f5ff; border: 1px solid #74c0fc;
-    border-radius: var(--radius); padding: .65rem 1.25rem;
-    color: #1971c2; font-size: .85rem;
-}
-.nm-partial-bar i { color: #1971c2; }
+.nm-banner--locked { background: var(--amber-bg); border: 1px solid #fcd34d; color: var(--amber); }
+.nm-banner--info   { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
+.d-none { display: none !important; }
 
-/* ════════════════════════════════════════════════════════════
-   FILTRES
-════════════════════════════════════════════════════════════ */
-.nm-filters-panel {
-    background: var(--c-surface); border: 1px solid var(--c-border);
-    border-radius: var(--radius-lg); padding: 1.5rem;
-    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1.25rem;
+/* ── Panel filtres ── */
+.nm-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--rl); padding: 1.25rem 1.5rem; box-shadow: var(--sh);
+    display: flex; flex-direction: column; gap: 1rem;
 }
-.nm-filters-row { display: flex; align-items: flex-end; gap: .5rem; flex-wrap: wrap; }
-.nm-filters-row--secondary { padding-top: 1rem; border-top: 1px solid var(--c-border); }
-.nm-filter-group { display: flex; flex-direction: column; gap: .4rem; flex: 1; min-width: 140px; }
-.nm-filter-group--wide { flex: 2; min-width: 220px; }
-.nm-filter-group--action { flex: 0 0 auto; }
-.nm-filter-sep { color: var(--c-text-3); font-size: .75rem; padding-bottom: .5rem; flex-shrink: 0; align-self: flex-end; }
+.nm-panel-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+}
+.nm-panel-title {
+    display: flex; align-items: center; gap: .45rem;
+    font-size: .9rem; font-weight: 700; color: var(--text);
+}
+.nm-panel-title svg { color: var(--blue); }
+
+/* ── Step tracker ── */
+.nm-step-track { display: flex; align-items: center; gap: 0; }
+.nm-step {
+    display: flex; align-items: center; gap: .35rem;
+    font-size: .75rem; font-weight: 600; color: var(--text3);
+}
+.nm-step-dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--s3); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 700; color: var(--text3);
+    transition: all var(--t);
+}
+.nm-step.step-active .nm-step-dot { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 0 0 3px var(--blue-10); }
+.nm-step.step-active { color: var(--blue); }
+.nm-step.step-done   .nm-step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.nm-step.step-done   { color: var(--green); }
+.nm-step-line { width: 28px; height: 2px; background: var(--border); margin: 0 2px; }
+
+/* ── Filters grid ── */
+.nm-filters-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem;
+}
+@media (max-width: 900px) { .nm-filters-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px) { .nm-filters-grid { grid-template-columns: 1fr; } }
+
+.nm-filters-row2 {
+    display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap;
+}
+.nm-fg { display: flex; flex-direction: column; gap: .35rem; flex: 1; min-width: 120px; }
+.nm-fg--sm   { flex: 0 0 auto; }
+.nm-fg--wide { flex: 3; }
+.nm-fg--auto { flex: 0 0 auto; }
 .nm-label {
-    font-size: .78rem; font-weight: 600; color: var(--c-text-2);
-    letter-spacing: .3px; text-transform: uppercase;
-    display: flex; align-items: center; gap: .3rem; white-space: nowrap;
+    font-size: .72rem; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: .5px;
+    display: flex; align-items: center; gap: .3rem;
 }
-.nm-label i { color: var(--c-primary); font-size: .7rem; }
-.nm-label--invisible { opacity: 0; pointer-events: none; }
+.nm-label svg { color: var(--blue); }
+.nm-label--ghost { opacity: 0; pointer-events: none; }
 .nm-select {
-    font-family: var(--f-sans); font-size: .875rem; height: 42px;
-    padding: 0 2rem 0 .875rem;
-    background: var(--c-surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%239aa0ae' d='M8 10.94L2.53 5.47l1.06-1.06L8 8.82l4.41-4.41 1.06 1.06z'/%3E%3C/svg%3E") no-repeat right .6rem center / 14px;
-    border: 1px solid var(--c-border); border-radius: var(--radius);
-    color: var(--c-text); cursor: pointer; width: 100%; appearance: none;
-    transition: border-color var(--transition), box-shadow var(--transition);
+    font-family: var(--ff); font-size: .875rem; height: 40px; padding: 0 2.2rem 0 .8rem;
+    background: var(--s2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%238c92a8' d='M8 11L3 6h10z'/%3E%3C/svg%3E") no-repeat right .65rem center / 12px;
+    border: 1.5px solid var(--border); border-radius: var(--r);
+    color: var(--text); width: 100%; appearance: none; cursor: pointer;
+    transition: border-color var(--t), box-shadow var(--t);
 }
-.nm-select:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-10); background-color: var(--c-surface); }
-.nm-select:disabled { opacity: .5; cursor: not-allowed; }
-.nm-select:not(:disabled):hover { border-color: var(--c-primary); }
-.nm-select-with-badge { position: relative; }
-.nm-coeff-badge {
-    position: absolute; right: 2.25rem; top: 50%; transform: translateY(-50%);
-    background: var(--c-primary-10); color: var(--c-primary);
-    border: 1px solid var(--c-primary-20); border-radius: 6px;
-    padding: 2px 8px; font-size: .72rem; font-weight: 600;
-    display: flex; align-items: center; gap: 3px; pointer-events: none;
+.nm-select:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-10); background-color:var(--surface); }
+.nm-select:not(:disabled):hover { border-color: #a0a8bf; }
+.nm-select:disabled { opacity: .45; cursor: not-allowed; }
+
+.nm-coeff-pill {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--blue-10); color: var(--blue);
+    border: 1.5px solid var(--blue-20); border-radius: 8px;
+    padding: 2px 10px; font-size: .78rem; font-weight: 700; white-space: nowrap;
 }
-.nm-semester-toggle {
-    display: flex; border: 1px solid var(--c-border); border-radius: var(--radius);
-    overflow: hidden; background: var(--c-surface-2); height: 42px;
+
+/* ── Semestre toggle ── */
+.nm-sem-toggle {
+    display: flex; height: 40px; border: 1.5px solid var(--border);
+    border-radius: var(--r); overflow: hidden;
 }
 .nm-sem-btn {
-    flex: 1; border: none; background: none; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: var(--f-sans); padding: 0 1rem; line-height: 1;
-    transition: background var(--transition);
+    flex: 1; min-width: 56px; border: none; background: var(--s2);
+    font-family: var(--ff); font-size: .875rem; font-weight: 700;
+    cursor: pointer; color: var(--text2);
+    transition: background var(--t), color var(--t);
 }
-.nm-sem-btn span  { font-size: .9rem; font-weight: 700; }
-.nm-sem-btn small { font-size: .65rem; color: var(--c-text-3); margin-top: 2px; }
-.nm-sem-btn--active { background: var(--c-primary); color: #fff; }
-.nm-sem-btn--active small { color: rgba(255,255,255,.7); }
-.nm-sem-btn:not(.nm-sem-btn--active):hover { background: var(--c-primary-10); }
-.nm-btn-load {
-    font-family: var(--f-sans); height: 42px; padding: 0 1.5rem;
-    background: var(--c-primary); color: #fff; border: none;
-    border-radius: var(--radius); font-weight: 600; font-size: .9rem;
-    cursor: pointer; display: flex; align-items: center; gap: .5rem;
-    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
-    white-space: nowrap;
+.nm-sem-btn--on { background: var(--blue); color: #fff; }
+.nm-sem-btn:not(.nm-sem-btn--on):hover { background: var(--blue-10); color: var(--blue); }
+
+/* ── Bouton principal ── */
+.nm-btn-primary {
+    font-family: var(--ff); height: 40px; padding: 0 1.35rem;
+    background: linear-gradient(135deg, var(--blue), #3b82f6);
+    color: #fff; border: none; border-radius: var(--r);
+    font-size: .875rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: .5rem; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(29,78,216,.35);
+    transition: transform var(--t), box-shadow var(--t), opacity var(--t);
 }
-.nm-btn-load:hover:not(:disabled) { background: var(--c-primary-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,91,219,.35); }
-.nm-btn-load:disabled { opacity: .5; cursor: not-allowed; }
-.nm-progress-track {
-    height: 6px; background: var(--c-border); border-radius: 99px;
-    overflow: hidden; position: relative; align-items: center;
+.nm-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(29,78,216,.40); }
+.nm-btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+.btn-icon { display:flex; flex-shrink:0; }
+
+/* ── Progress ── */
+.nm-progress-wrap {
+    display: flex; align-items: center; gap: .65rem;
+}
+.nm-progress-bar {
+    flex: 1; height: 6px; background: var(--s3);
+    border-radius: 99px; overflow: hidden;
 }
 .nm-progress-fill {
-    height: 100%; width: 0; background: linear-gradient(90deg, var(--c-primary), #74c0fc);
-    border-radius: 99px; transition: width .4s cubic-bezier(.4,0,.2,1);
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--blue), #60a5fa);
+    border-radius: 99px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
 }
-.nm-progress-label {
-    position: absolute; right: 0; top: -18px;
-    font-size: .72rem; font-weight: 600; color: var(--c-text-2); font-family: var(--f-mono);
+.nm-progress-txt {
+    font-family: var(--mono); font-size: .75rem; font-weight: 600;
+    color: var(--text2); min-width: 32px; text-align: right;
+}
+.nm-divider { height: 1px; background: var(--border); }
+
+/* ── Shortcuts bar ── */
+.nm-shortcuts-bar {
+    display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: .6rem 1rem;
+    font-size: .76rem; color: var(--text3);
+}
+.sc-item { display: flex; align-items: center; gap: .3rem; }
+.sc-item--blue { color: #1e40af; }
+.sc-item kbd {
+    background: var(--s3); border: 1px solid var(--border); border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 5px; font-size: .7rem; font-family: var(--mono); color: var(--text2);
 }
 
-/* ════════════════════════════════════════════════════════════
-   RACCOURCIS
-════════════════════════════════════════════════════════════ */
-.nm-shortcuts {
-    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
-    padding: .6rem 1rem; background: var(--c-surface-2);
-    border: 1px solid var(--c-border); border-radius: var(--radius);
-    font-size: .78rem; color: var(--c-text-3);
-}
-.nm-shortcut { display: flex; align-items: center; gap: .3rem; }
-.nm-shortcut kbd {
-    background: var(--c-surface); border: 1px solid var(--c-border);
-    border-bottom-width: 2px; border-radius: 5px;
-    padding: 1px 5px; font-size: .72rem; font-family: var(--f-mono); color: var(--c-text-2);
-}
-.nm-shortcut--lock { color: #1971c2; }
-.nm-shortcut--lock i { font-size: .72rem; }
-
-/* ════════════════════════════════════════════════════════════
-   ÉTAT VIDE
-════════════════════════════════════════════════════════════ */
-.nm-empty-state {
+/* ── Empty state ── */
+.nm-empty {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: .75rem; padding: 4rem 2rem;
-    background: var(--c-surface); border: 1px dashed var(--c-border-2);
-    border-radius: var(--radius-lg); color: var(--c-text-3); text-align: center;
+    gap: .9rem; padding: 5rem 2rem;
+    background: var(--surface); border: 1.5px dashed var(--border);
+    border-radius: var(--rl); text-align: center; color: var(--text3);
 }
-.nm-empty-icon {
-    width: 64px; height: 64px; border-radius: 16px;
-    background: var(--c-surface-2); border: 1px solid var(--c-border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; color: var(--c-primary);
+.nm-empty-visual { position: relative; width: 90px; height: 90px; }
+.nm-ring {
+    position: absolute; border-radius: 50%;
+    border: 2px solid transparent; border-top-color: var(--blue);
+    animation: spin linear infinite;
 }
-.nm-empty-state h3 { font-size: 1.1rem; font-weight: 600; color: var(--c-text-2); }
-.nm-empty-state p  { font-size: .875rem; line-height: 1.6; max-width: 380px; }
+.nm-ring-1 { inset:0;       opacity:.15; animation-duration:3s; }
+.nm-ring-2 { inset:12px;    opacity:.25; animation-duration:4.5s; border-top-color: #3b82f6; }
+.nm-ring-3 { inset:24px;    opacity:.4;  animation-duration:2.5s; animation-direction: reverse; }
+.nm-empty-icon-center {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color: var(--blue);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.nm-empty h3 { font-size: 1.05rem; font-weight: 700; color: var(--text2); }
+.nm-empty p  { font-size: .875rem; line-height: 1.65; max-width: 360px; }
 
-/* ════════════════════════════════════════════════════════════
-   TABLEAU
-════════════════════════════════════════════════════════════ */
-.nm-table-wrap {
-    background: var(--c-surface); border: 1px solid var(--c-border);
-    border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+/* ── Card / Table ── */
+.nm-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--rl); box-shadow: var(--sh); overflow: hidden;
 }
-.nm-table-toolbar {
+.nm-card-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: .875rem 1.25rem; border-bottom: 1px solid var(--c-border);
-    gap: .75rem; flex-wrap: wrap;
+    padding: .875rem 1.25rem; border-bottom: 1px solid var(--border); gap: .75rem; flex-wrap: wrap;
 }
-.nm-toolbar-info { font-size: .85rem; color: var(--c-text-2); font-weight: 500; }
-.nm-toolbar-info span { color: var(--c-primary); font-weight: 600; }
-.nm-toolbar-actions { display: flex; gap: .5rem; }
-.nm-btn {
-    font-family: var(--f-sans); font-size: .85rem; font-weight: 600;
-    height: 36px; padding: 0 1rem; border-radius: 8px; cursor: pointer;
-    display: inline-flex; align-items: center; gap: .4rem;
-    transition: background var(--transition), transform var(--transition);
-    border: 1px solid transparent; white-space: nowrap;
+.nm-card-title { font-size: .9rem; font-weight: 700; color: var(--text); }
+
+.nm-btn-ghost {
+    font-family: var(--ff); height: 36px; padding: 0 1rem;
+    background: var(--s2); border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: .82rem; font-weight: 600;
+    color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: .35rem;
+    transition: background var(--t);
 }
-.nm-btn--ghost { background: var(--c-surface-2); color: var(--c-text-2); border-color: var(--c-border); }
-.nm-btn--ghost:hover { background: var(--c-border); }
-.nm-btn--primary { background: var(--c-primary); color: #fff; }
-.nm-btn--primary:hover:not(:disabled) { background: var(--c-primary-h); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,91,219,.3); }
-.nm-btn--primary:disabled { opacity: .45; cursor: not-allowed; }
-.nm-save-count {
+.nm-btn-ghost:hover { background: var(--s3); }
+
+.nm-btn-save {
+    font-family: var(--ff); height: 36px; padding: 0 1.2rem;
+    background: linear-gradient(135deg, var(--blue), #3b82f6);
+    color: #fff; border: none; border-radius: 8px;
+    font-size: .85rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: .35rem;
+    box-shadow: 0 2px 8px rgba(29,78,216,.3);
+    transition: transform var(--t), box-shadow var(--t), opacity var(--t);
+}
+.nm-btn-save:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(29,78,216,.38); }
+.nm-btn-save:disabled { opacity:.4; cursor:not-allowed; }
+.nm-save-badge {
     background: rgba(255,255,255,.3); border-radius: 99px;
-    min-width: 20px; height: 20px; font-size: .72rem; font-weight: 700;
-    display: inline-flex; align-items: center; justify-content: center; padding: 0 5px;
-}
-.nm-table-scroll { overflow-x: auto; }
-.nm-table { width: 100%; border-collapse: collapse; font-size: .855rem; font-family: var(--f-sans); }
-.nm-th {
-    padding: .75rem .5rem; background: var(--c-surface-2);
-    border-bottom: 2px solid var(--c-border);
-    font-weight: 600; font-size: .775rem; letter-spacing: .2px;
-    color: var(--c-text-2); text-align: center; white-space: nowrap; user-select: none;
-}
-.nm-th--num    { width: 40px; }
-.nm-th--name   { text-align: left; min-width: 110px; padding-left: 1rem; }
-.nm-th--note   { width: 80px; }
-.nm-th--avg    { width: 80px; background: #edf2ff; color: var(--c-primary); }
-.nm-th--final  { width: 90px; background: #ebfbee; color: var(--c-success); }
-.nm-th--status { width: 40px; }
-.interro-header, .devoir-header { cursor: pointer; }
-.interro-header:hover, .devoir-header:hover { background: var(--c-primary-10); }
-.nm-col-header { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.nm-col-header > span { font-weight: 700; font-size: .82rem; }
-.nm-header-input {
-    font-family: var(--f-mono); font-size: .78rem; font-weight: 500;
-    width: 58px; height: 28px; padding: 0 6px; text-align: center;
-    border: 1px solid var(--c-border-2); border-radius: 6px;
-    background: var(--c-surface); color: var(--c-text);
-    transition: border-color var(--transition), box-shadow var(--transition);
-}
-.nm-header-input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 2px var(--c-primary-10); }
-.nm-auto-tag {
-    font-size: .65rem; font-weight: 500; background: rgba(0,0,0,.06);
-    border-radius: 4px; padding: 1px 5px; color: inherit;
-    text-transform: uppercase; letter-spacing: .3px;
+    min-width: 18px; height: 18px; font-size: .7rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
 }
 
-/* Lignes */
+/* ── Table ── */
+.nm-table { width: 100%; border-collapse: collapse; font-size: .845rem; font-family: var(--ff); }
+.nm-table thead th {
+    padding: .7rem .45rem; background: var(--s2);
+    border-bottom: 2px solid var(--border);
+    font-weight: 700; font-size: .75rem; letter-spacing: .2px;
+    color: var(--text2); text-align: center; white-space: nowrap; user-select: none;
+}
+.th-num    { width: 40px; }
+.th-name   { text-align: left; padding-left: .9rem !important; }
+.th-note   { width: 82px; cursor: pointer; }
+.th-note:hover { background: var(--blue-10); }
+.th-avg    { width: 78px; background: #eff6ff !important; color: var(--blue) !important; }
+.th-final  { width: 90px; background: #f0fdf4 !important; color: var(--green) !important; }
+.th-status { width: 40px; }
+.th-inner {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: .78rem;
+}
+.th-auto {
+    font-size: .62rem; background: rgba(0,0,0,.07); border-radius: 4px;
+    padding: 1px 5px; letter-spacing: .3px; text-transform: uppercase; color: inherit;
+}
+.nm-hdr-inp {
+    font-family: var(--mono); font-size: .76rem; font-weight: 500;
+    width: 58px; height: 26px; padding: 0 5px; text-align: center;
+    border: 1.5px solid var(--border); border-radius: 6px;
+    background: var(--surface); color: var(--text);
+    transition: border-color var(--t);
+}
+.nm-hdr-inp:focus { outline:none; border-color:var(--blue); }
+
 .nm-row td {
-    padding: .45rem .5rem; border-bottom: 1px solid var(--c-border);
-    vertical-align: middle; text-align: center; transition: background var(--transition);
+    padding: .4rem .45rem; border-bottom: 1px solid var(--border);
+    vertical-align: middle; text-align: center;
 }
 .nm-row:last-child td { border-bottom: none; }
-.nm-row:hover td      { background: rgba(59,91,219,.03); }
-.nm-row--modified td  { background: var(--c-modified-bg) !important; }
-.nm-row--saved td     { background: var(--c-saved-bg) !important; }
-.nm-row--readonly td  { background: var(--c-locked-bg); }
-.nm-td--num  { color: var(--c-text-3); font-family: var(--f-mono); font-size: .8rem; }
-.nm-td--name { text-align: left; padding-left: 1rem; font-weight: 500; white-space: nowrap; }
-
-/* Cellules verrouillées individuellement */
-.nm-cell--locked { background: var(--c-locked-bg) !important; }
-
-/* Wrapper input + icône cadenas */
-.nm-input-wrap { position: relative; display: inline-flex; align-items: center; }
-.nm-input-wrap--locked .nm-note-input { padding-right: 20px; }
-.nm-field-lock-icon {
-    position: absolute; right: 6px;
-    font-size: .6rem; color: var(--c-text-3); pointer-events: none;
-}
-
-/* Badge cadenas partiel sur le nom */
-.nm-partial-lock {
+.nm-row:hover td { background: rgba(29,78,216,.025); }
+.nm-row--mod  td { background: var(--mod-bg) !important; }
+.nm-row--saved td { background: var(--saved-bg) !important; }
+.nm-row--lock td { background: var(--locked-bg); }
+.td-num    { color: var(--text3); font-family: var(--mono); font-size: .78rem; }
+.td-name   { text-align: left; padding-left: .9rem !important; font-weight: 600; white-space: nowrap; }
+.td-surname { font-weight: 400; }
+.td-locked { background: var(--locked-bg) !important; }
+.inp-wrap { position: relative; display: inline-flex; align-items: center; }
+.inp-wrap--lock .nm-inp { padding-right: 20px; }
+.inp-lock-ico { position: absolute; right: 5px; font-size: .62rem; pointer-events: none; opacity: .5; }
+.partial-badge {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: .35rem;
-    background: #e7f5ff; border-radius: 4px;
-    color: #1971c2; font-size: .58rem; vertical-align: middle;
-    cursor: help;
+    width: 15px; height: 15px; margin-left: 4px;
+    background: #dbeafe; border-radius: 4px; color: #1e40af; font-size: .68rem; font-weight: 700;
+    vertical-align: middle; cursor: help;
 }
 
-/* Inputs notes */
-.nm-note-input {
-    font-family: var(--f-mono); font-size: .855rem; font-weight: 500;
-    width: 64px; height: 32px; text-align: center; padding: 0 4px;
-    border: 1px solid transparent; border-radius: 6px;
-    background: var(--c-surface-2); color: var(--c-text);
-    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+.nm-inp {
+    font-family: var(--mono); font-size: .845rem; font-weight: 500;
+    width: 62px; height: 32px; text-align: center; padding: 0 4px;
+    border: 1.5px solid transparent; border-radius: 7px;
+    background: var(--s2); color: var(--text);
     display: block; margin: 0 auto;
+    transition: border-color var(--t), box-shadow var(--t), background var(--t);
 }
-.nm-note-input:hover:not(:disabled):not([readonly]) { border-color: var(--c-border-2); background: var(--c-surface); }
-.nm-note-input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-10); background: var(--c-surface); }
-.nm-note-input:disabled  { background: transparent; opacity: .4; cursor: not-allowed; }
-.nm-note-input[readonly] {
-    background: var(--c-locked-bg); color: var(--c-text-3);
-    cursor: not-allowed; border-color: var(--c-locked-bd);
-    border-style: dashed;
+.nm-inp:hover:not(:disabled):not([readonly]) { border-color: var(--border2); background: var(--surface); }
+.nm-inp:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-10); background:var(--surface); }
+.nm-inp:disabled { background:transparent; opacity:.3; cursor:not-allowed; }
+.nm-inp[readonly] {
+    background: var(--locked-bg); color: var(--text3);
+    cursor: not-allowed; border-color: var(--locked-bd); border-style: dashed;
 }
 
-/* Badges moyennes */
-.nm-avg-badge { display: inline-block; font-family: var(--f-mono); font-weight: 600; font-size: .855rem; color: var(--c-primary); min-width: 48px; text-align: center; }
-.nm-avg-final {
+.nm-moy { font-family: var(--mono); font-weight: 700; font-size: .84rem; color: var(--blue); }
+.nm-moy-final {
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--f-mono); font-weight: 700; font-size: .9rem;
-    padding: 3px 10px; border-radius: 6px; min-width: 52px;
-    background: var(--c-surface-2); color: var(--c-text-2);
-    transition: background var(--transition), color var(--transition);
+    font-family: var(--mono); font-weight: 700; font-size: .875rem;
+    padding: 3px 9px; border-radius: 7px; min-width: 52px;
+    background: var(--s2); color: var(--text2);
 }
-.nm-avg--pass { background: var(--c-success-bg); color: var(--c-success); }
-.nm-avg--fail { background: var(--c-danger-bg);  color: var(--c-danger);  }
+.moy-pass { background: var(--green-bg); color: var(--green); }
+.moy-fail { background: var(--red-bg); color: var(--red); }
 
-/* Icônes statut */
-.nm-status-icon      { font-size: .85rem; transition: color var(--transition); }
-.nm-status--pending  { color: var(--c-text-3); font-size: .55rem; }
-.nm-status--modified { color: var(--c-warning); }
-.nm-status--saved    { color: var(--c-success); font-size: .95rem; }
-.nm-status--locked   { color: var(--c-text-3); }
+.nm-status {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    transition: background var(--t);
+}
+.st-pending  { background: var(--border2); }
+.st-mod      { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-bg); }
+.st-saved    { background: var(--green); box-shadow: 0 0 0 3px var(--green-bg); }
+.st-locked   { background: var(--text3); }
 
-/* Footer stats */
-.nm-table-footer  { border-top: 1px solid var(--c-border); padding: .75rem 1.25rem; }
-.nm-footer-stats  { display: flex; align-items: center; flex-wrap: wrap; }
-.nm-footer-stat   { display: flex; flex-direction: column; align-items: center; padding: .3rem 1.25rem; }
-.nm-footer-divider{ width: 1px; height: 28px; background: var(--c-border); flex-shrink: 0; }
-.nm-footer-val    { font-family: var(--f-mono); font-weight: 700; font-size: 1rem; color: var(--c-text); }
-.nm-footer-val--success { color: var(--c-success); }
-.nm-footer-val--danger  { color: var(--c-danger);  }
-.nm-footer-key    { font-size: .72rem; color: var(--c-text-3); font-weight: 500; text-transform: uppercase; letter-spacing: .3px; margin-top: 1px; }
+/* ── Stats bar ── */
+.nm-stats-bar {
+    display: flex; align-items: center; flex-wrap: wrap;
+    border-top: 1px solid var(--border); padding: .65rem 1.25rem;
+}
+.nm-stat { display: flex; flex-direction: column; align-items: center; padding: .25rem 1rem; }
+.nm-stat-sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+.nm-stat-val { font-family: var(--mono); font-weight: 700; font-size: .98rem; color: var(--text); }
+.nm-stat-val--g { color: var(--green); }
+.nm-stat-val--r { color: var(--red); }
+.nm-stat-key { font-size: .7rem; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; }
 
-/* ════════════════════════════════════════════════════════════
-   SPINNER
-════════════════════════════════════════════════════════════ */
-@keyframes nm-spin { to { transform: rotate(360deg); } }
-.nm-spinner {
-    width: 20px; height: 20px; border-radius: 50%;
+/* ── Spinner ── */
+@keyframes spin2 { to { transform: rotate(360deg); } }
+.nm-spin {
+    width: 16px; height: 16px; border-radius: 50%;
     border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
-    animation: nm-spin .7s linear infinite; flex-shrink: 0;
+    animation: spin2 .7s linear infinite; flex-shrink: 0;
 }
-.nm-spinner--sm { width: 14px; height: 14px; }
+.nm-spin--sm { width: 13px; height: 13px; border-width: 2px; }
 
-/* ════════════════════════════════════════════════════════════
-   RESPONSIVE
-════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-    .nm-root            { padding: .75rem; gap: .75rem; }
-    .nm-topbar          { padding: .875rem 1rem; }
-    .nm-filter-sep      { display: none; }
-    .nm-filter-group    { min-width: 100%; flex: 1 1 100%; }
-    .nm-filter-group--wide { min-width: 100%; }
-    .nm-filter-group--action { width: 100%; }
-    .nm-btn-load        { width: 100%; justify-content: center; }
-    .nm-footer-stats    { justify-content: center; }
-    .nm-footer-stat     { padding: .3rem .75rem; }
-}
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--c-border-2); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--c-text-3); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type=number] { -moz-appearance: textfield; }
+
+@media (max-width: 640px) {
+    .nm-root { padding: .75rem; }
+    .nm-panel-header { flex-direction: column; align-items: flex-start; }
+    .nm-step-track { display: none; }
+    .nm-filters-row2 .nm-fg { min-width: 100%; }
+    .nm-btn-primary { width: 100%; justify-content: center; }
+    .nm-stats-bar { justify-content: center; }
+    .nm-stat { padding: .25rem .6rem; }
+}
 </style>
 @endsection

@@ -180,9 +180,9 @@ class NoteController extends Controller
                             }
                         }
                         $notesParMatiere[$subjectId] = [
-                            'note'        => $note,
-                            'moy_interros'=> $moyInterros,
-                            'moy_20'      => $moy20,
+                            'note'         => $note,
+                            'moy_interros' => $moyInterros,
+                            'moy_20'       => $moy20,
                         ];
                     }
 
@@ -192,9 +192,9 @@ class NoteController extends Controller
 
                     $recording = $studentNotes->first()->recording;
                     $studentsData->push([
-                        'student'          => $recording->student,
-                        'notes_par_matiere'=> $notesParMatiere,
-                        'moyenne_generale' => $moyenneGenerale,
+                        'student'           => $recording->student,
+                        'notes_par_matiere' => $notesParMatiere,
+                        'moyenne_generale'  => $moyenneGenerale,
                     ]);
                 }
                 $studentsData = $studentsData->sortBy(fn($s) => $s['student']->name)->values();
@@ -467,7 +467,12 @@ class NoteController extends Controller
     }
 
     // =========================================================
-    // API — Matières (filtrées enseignant)
+    // API — Matières filtrées par classe ET par semestre
+    //
+    // Règle :
+    //   semester = null (dans ratios) → visible en S1 ET S2
+    //   semester = 1                  → visible en S1 seulement
+    //   semester = 2                  → visible en S2 seulement
     // =========================================================
 
     public function getSubjectsByClassroom(Request $request)
@@ -475,16 +480,30 @@ class NoteController extends Controller
         $request->validate([
             'classroom_id' => 'required|integer|exists:promotion_classrooms,id',
             'year_id'      => 'required|integer|exists:years,id',
+            'semester'     => 'nullable|integer|in:1,2',
         ]);
 
         $user      = Auth::user();
         $classroom = PromotionClassroom::findOrFail($request->classroom_id);
+        $semester  = $request->semester ? (int) $request->semester : null;
 
         $query = Ratio::with('subject')
             ->where('year_id',             $request->year_id)
             ->where('promotion_sector_id', $classroom->promotion_sector_id)
             ->where('classroom_id',        $request->classroom_id);
 
+        // ── Filtrage par semestre ─────────────────────────────────────
+        // On garde les ratios dont semester = null (les deux semestres)
+        // OU dont semester correspond exactement au semestre demandé.
+        if ($semester !== null) {
+            $query->where(function ($q) use ($semester) {
+                $q->whereNull('semester')
+                  ->orWhere('semester', $semester);
+            });
+        }
+        // Si aucun semestre passé, on retourne tout (cas fallback)
+
+        // ── Filtre enseignant ─────────────────────────────────────────
         if ($user->isEnseignant()) {
             $subjectIds = ClassSubjectTeacher::where('user_id', $user->id)
                 ->where('classroom_id', $request->classroom_id)
@@ -498,12 +517,13 @@ class NoteController extends Controller
             'subject_id'   => $r->subject_id,
             'subject_name' => $r->subject->name,
             'coefficient'  => $r->coefficient,
+            'semester'     => $r->semester, // null | 1 | 2 — info pour le frontend
         ]);
 
         if ($ratios->isEmpty()) {
             return response()->json([
                 'success'  => false,
-                'message'  => 'Aucune matière trouvée pour cette classe.',
+                'message'  => 'Aucune matière disponible pour ce semestre.',
                 'subjects' => [],
             ]);
         }
@@ -569,7 +589,7 @@ class NoteController extends Controller
             ->where('is_locked',  true)
             ->exists();
 
-        $canModify = $this->canModifyExistingNote(); // admin/censeur/proviseur = true, enseignant = false
+        $canModify = $this->canModifyExistingNote();
 
         $students = $recordings->map(function ($recording) use ($request, $ratio, $canModify) {
             $note = Note::where('recording_id', $recording->id)
@@ -622,7 +642,7 @@ class NoteController extends Controller
             }
 
             // field_readonly global = vrai seulement si TOUS les champs sont verrouillés
-            $allLocked   = $noteExists && !$canModify
+            $allLocked = $noteExists && !$canModify
                 && array_sum(array_values($fieldsReadonly)) === count($fieldsReadonly);
 
             return [
@@ -637,17 +657,17 @@ class NoteController extends Controller
                 'moy_interros'    => $moyInterros,
                 'moy_20'          => $moy20,
                 'note_exists'     => $noteExists,
-                'field_readonly'  => $allLocked,    // compat ancienne logique
-                'fields_readonly' => $fieldsReadonly, // NEW : par champ
+                'field_readonly'  => $allLocked,      // compat ancienne logique
+                'fields_readonly' => $fieldsReadonly, // par champ
             ];
         })->sortBy('name')->values();
 
         return response()->json([
-            'success'     => true,
-            'students'    => $students,
-            'is_locked'   => $isLocked,
-            'can_edit'    => !($isLocked && $user->isEnseignant()),
-            'can_modify'  => $canModify,
+            'success'    => true,
+            'students'   => $students,
+            'is_locked'  => $isLocked,
+            'can_edit'   => !($isLocked && $user->isEnseignant()),
+            'can_modify' => $canModify,
         ]);
     }
 
@@ -757,14 +777,12 @@ class NoteController extends Controller
                         // Fusion : on garde les valeurs BDD pour les index déjà remplis
                         $mergedInterros = $savedInterros;
                         foreach ($newInterros as $idx => $val) {
-                            // N'écrit que si la case BDD est vide à cet index
                             if (!isset($mergedInterros[$idx])
                                 || $mergedInterros[$idx] === null
                                 || $mergedInterros[$idx] === '') {
                                 $mergedInterros[$idx] = $val;
                             }
                         }
-                        // Réindexation propre
                         $mergedInterros = array_values(array_filter(
                             $mergedInterros,
                             fn($v) => $v !== null && $v !== '' && is_numeric($v)
@@ -780,7 +798,7 @@ class NoteController extends Controller
                             'devoir1'  => $mergedD1,
                             'devoir2'  => $mergedD2,
                         ]);
-                        continue; // passe à l'élève suivant
+                        continue;
                     }
                 }
 

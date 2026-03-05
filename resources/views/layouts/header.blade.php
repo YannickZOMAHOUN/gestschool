@@ -35,7 +35,7 @@
         {{-- Notifications --}}
         <div class="dk-action-btn" id="notifBtn" aria-label="Notifications">
             <i class="fas fa-bell"></i>
-            <span class="dk-notif-dot">3</span>
+           <!-- <span class="dk-notif-dot">3</span>-->
         </div>
 
         {{-- Séparateur --}}
