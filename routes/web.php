@@ -40,9 +40,6 @@ Route::middleware('auth')->group(function () {
 });
 
 // ─── Zone principale ───────────────────────────────────────────────────────
-// EnseignantMiddleware : si l'utilisateur est Enseignant et tente d'accéder
-// à une route non autorisée, il est redirigé vers note.create.
-// ──────────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', ForcePasswordChange::class, EnseignantMiddleware::class])->group(function () {
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -83,7 +80,7 @@ Route::middleware(['auth', ForcePasswordChange::class, EnseignantMiddleware::cla
     Route::post('/classes/store',  [PromotionClassroomController::class, 'store'])->name('promotion-classrooms.store');
     Route::get('/api/classroom-sectors-by-year/{yearId}',       [PromotionClassroomController::class, 'getSectorsByYear']);
     Route::get('/api/classroom-promotions/{yearId}/{sectorId}', [PromotionClassroomController::class, 'getPromotions']);
-    Route::get('/api/existing-classrooms/{yearId}/{sectorId}',       [PromotionClassroomController::class, 'getExistingClassrooms']); 
+    Route::get('/api/existing-classrooms/{yearId}/{sectorId}',  [PromotionClassroomController::class, 'getExistingClassrooms']);
 
     // ── Matières ───────────────────────────────────────────────────────────
     Route::get('/api/subject-sectors-by-year/{yearId}',       [SubjectController::class, 'getSectorsByYear']);
@@ -121,14 +118,36 @@ Route::middleware(['auth', ForcePasswordChange::class, EnseignantMiddleware::cla
         Route::get ('/classes/{yearId}/{sectorId}', [TeacherAssignmentController::class, 'getClassesWithPrincipal']);
     });
 
-    // ── API notes (dropdowns filtrés + saisie) ────────────────────────────
-    Route::get ('/api/sectors-by-year/{yearId}',                      [NoteController::class, 'getSectorsByYear']);
-    Route::get ('/api/promotions-by-year-sector/{yearId}/{sectorId}', [NoteController::class, 'getPromotionsByYearSector']);
-    Route::get ('/api/classes-by-promotion/{promotionId}',            [NoteController::class, 'getClassesByPromotion']);
-    Route::post('/api/subjects-by-classroom',                         [NoteController::class, 'getSubjectsByClassroom']);
-    Route::post('/api/students-with-notes',                           [NoteController::class, 'getStudentsWithNotes']);
-    Route::post('/api/notes/bulk',                                     [NoteController::class, 'storeBulk']);
+    // ── API notes ──────────────────────────────────────────────────────────
 
-    // ── Verrouillage notes (censeur/admin uniquement) ──────────────────────
+    // Année active (utilisée par create & export pour pré-charger)
+    Route::get('/api/active-year', [NoteController::class, 'getActiveYearApi']);
+
+    // Cascade intelligente : Filière → Promotion → Classe
+    // (filtrage automatique selon le rôle de l'utilisateur connecté)
+    Route::get('/api/sectors-for-create/{yearId}',               [NoteController::class, 'getSectorsForCreate']);
+    Route::get('/api/promotions-for-create/{yearId}/{sectorId}', [NoteController::class, 'getPromotionsForCreate']);
+    Route::get('/api/classrooms-for-create/{promotionId}',       [NoteController::class, 'getClassroomsForCreate']);
+
+    // Route simplifiée : toutes les classes d'une année en un seul appel
+    // (utilisée par la vue liste/consultation des notes)
+    Route::get('/api/classrooms-by-year/{yearId}', [NoteController::class, 'getClassroomsByYear']);
+
+    // Routes legacy conservées (utilisées par d'autres parties de l'app)
+    Route::get('/api/sectors-by-year/{yearId}',                      [NoteController::class, 'getSectorsByYear']);
+    Route::get('/api/promotions-by-year-sector/{yearId}/{sectorId}', [NoteController::class, 'getPromotionsByYearSector']);
+    Route::get('/api/classes-by-promotion/{promotionId}',            [NoteController::class, 'getClassesByPromotion']);
+
+    // Matières, élèves et sauvegarde
+    Route::post('/api/subjects-by-classroom', [NoteController::class, 'getSubjectsByClassroom']);
+    Route::post('/api/students-with-notes',   [NoteController::class, 'getStudentsWithNotes']);
+    Route::post('/api/notes/store-bulk',      [NoteController::class, 'storeBulk']);
+
+    // Alias pour compatibilité avec l'ancienne route /api/notes/bulk
+    Route::post('/api/notes/bulk', [NoteController::class, 'storeBulk']);
+
+    // Verrouillage notes (censeur/admin uniquement)
     Route::post('/api/notes/toggle-lock', [NoteController::class, 'toggleLock'])->name('notes.toggleLock');
-});
+Route::get ('/notes/import',         [NoteController::class, 'import_view'])->name('notes.import');
+Route::post('/notes/import/process', [NoteController::class, 'import'])->name('notes.import.process');
+    });

@@ -1,131 +1,203 @@
 @extends('layouts.template')
 
-@section('another_CSS')
+@section('breadcrumb', 'Affectation des enseignants')
+
+@push('styles')
 <style>
-:root {
-    --bg-base:     #0f1117;
-    --bg-card:     #161b27;
-    --bg-elevated: #1e2535;
-    --border:      #2a3247;
-    --accent:      #4f7df3;
-    --accent-dim:  rgba(79,125,243,.12);
-    --accent-glow: rgba(79,125,243,.35);
-    --success:     #22c55e;
-    --danger:      #ef4444;
-    --text-primary:   #e8eaf0;
-    --text-secondary: #7b8399;
-    --text-muted:     #4a5268;
-    --radius: 10px; --radius-sm: 6px; --transition: .18s ease;
-}
-body { background: var(--bg-base) !important; color: var(--text-primary) !important; }
-.dk-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; }
-.dk-card-header { display:flex; align-items:center; justify-content:space-between; padding:.9rem 1.25rem; border-bottom:1px solid var(--border); background:var(--bg-elevated); }
-.dk-card-header h5 { margin:0; font-size:.92rem; font-weight:700; color:var(--text-primary); }
-.dk-card-body { padding:1.5rem; }
-.form-label { font-size:.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.35rem; display:block; }
-.form-select, .form-control { background:var(--bg-base) !important; border:1px solid var(--border) !important; color:var(--text-primary) !important; border-radius:var(--radius-sm) !important; padding:.55rem .85rem !important; font-size:.875rem !important; transition:border-color var(--transition), box-shadow var(--transition); }
-.form-select:focus, .form-control:focus { border-color:var(--accent) !important; box-shadow:0 0 0 3px var(--accent-glow) !important; outline:none !important; }
-.form-select:disabled, .form-control:disabled { background:var(--bg-elevated) !important; color:var(--text-muted) !important; cursor:not-allowed; }
-.form-select option { background:var(--bg-card); }
-.btn-primary-dk { background:var(--accent); border:none; color:#fff; padding:.5rem 1.3rem; border-radius:20px; font-size:.85rem; font-weight:700; display:inline-flex; align-items:center; gap:.4rem; transition:all var(--transition); cursor:pointer; }
-.btn-primary-dk:hover { background:#3d6ce0; box-shadow:0 4px 14px var(--accent-glow); transform:translateY(-1px); color:#fff; }
-.btn-primary-dk:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-.btn-ghost-dk { background:transparent; border:1px solid var(--border); color:var(--text-secondary); padding:.5rem 1.3rem; border-radius:20px; font-size:.85rem; font-weight:600; display:inline-flex; align-items:center; gap:.4rem; transition:all var(--transition); cursor:pointer; }
-.btn-ghost-dk:hover { border-color:var(--text-secondary); color:var(--text-primary); }
-.btn-danger-dk { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.22); color:var(--danger); padding:.3rem .7rem; border-radius:var(--radius-sm); font-size:.78rem; font-weight:700; display:inline-flex; align-items:center; gap:.3rem; transition:all var(--transition); cursor:pointer; }
-.btn-danger-dk:hover { background:rgba(239,68,68,.2); }
-.dk-table { width:100%; border-collapse:collapse; }
-.dk-table thead th { background:var(--bg-base); color:var(--text-muted); font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:.65rem 1rem; border-bottom:1px solid var(--border); }
-.dk-table tbody td { padding:.7rem 1rem; border-bottom:1px solid rgba(42,50,71,.5); font-size:.875rem; vertical-align:middle; }
-.dk-table tbody tr:last-child td { border-bottom:none; }
-.dk-table tbody tr:hover td { background:var(--accent-dim); }
-.dk-alert { border-radius:var(--radius-sm); padding:.7rem 1rem; font-size:.85rem; display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; }
-.dk-alert-success { background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.25); color:var(--success); }
-.dk-alert-danger  { background:rgba(239,68,68,.1);  border:1px solid rgba(239,68,68,.25);  color:var(--danger); }
-.empty-state { text-align:center; padding:3rem 1rem; color:var(--text-muted); }
-.empty-state i { font-size:1.8rem; margin-bottom:.6rem; display:block; opacity:.3; }
-.modal-content { background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); }
-.modal-header, .modal-footer { border-color:var(--border) !important; }
-.btn-close { filter:invert(1) opacity(.5); }
-#liveClock { font-size:.75rem; color:var(--text-muted); }
-.spinner-border { color:var(--accent) !important; }
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{--sg-bg:#f6f7f3;--sg-surface:#fff;--sg-surface-2:#f1f3ee;--sg-surface-3:#e8ebe3;--sg-accent:#3a6b35;--sg-accent-mid:#5a9a52;--sg-accent-light:#eef4ec;--sg-accent-bg:rgba(58,107,53,.07);--sg-accent-bg2:rgba(58,107,53,.13);--sg-accent-glow:rgba(58,107,53,.18);--sg-text:#1c2318;--sg-text-2:#4a5544;--sg-text-3:#8a9880;--sg-border:#e2e5da;--sg-border-2:#cbd2c2;--sg-border-3:#b5bfaa;--sg-success:#2e7d4f;--sg-success-bg:rgba(46,125,79,.08);--sg-danger:#a84040;--sg-danger-bg:rgba(168,64,64,.07);--sg-warn:#9a6a1a;--sg-warn-bg:rgba(154,106,26,.08);--sg-info:#2a6090;--sg-info-bg:rgba(42,96,144,.08);--sg-font-display:'Lora',Georgia,serif;--sg-font-ui:'DM Sans',system-ui,sans-serif;--sg-font-mono:'JetBrains Mono','Fira Mono',monospace;--sg-radius:10px;--sg-radius-sm:7px;--sg-t:.17s cubic-bezier(.4,0,.2,1);}
+html[data-theme=dark]{--sg-surface:#1e2419;--sg-surface-2:#252c20;--sg-surface-3:#2d3527;--sg-accent:#6abf60;--sg-accent-mid:#85d47a;--sg-accent-light:rgba(106,191,96,.12);--sg-accent-bg:rgba(106,191,96,.09);--sg-accent-bg2:rgba(106,191,96,.16);--sg-accent-glow:rgba(106,191,96,.20);--sg-text:#e4ead8;--sg-text-2:#adb9a0;--sg-text-3:#627057;--sg-border:rgba(255,255,255,.08);--sg-border-2:rgba(255,255,255,.13);}
+.sg,.sg *{font-family:var(--sg-font-ui);box-sizing:border-box;}
+.sg{max-width:1100px;margin:0 auto;padding:0 0 4rem;color:var(--sg-text);}
+@keyframes sg-up{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+
+/* Header */
+.sg-hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--sg-border);flex-wrap:wrap;animation:sg-up .38s ease both;}
+.sg-hdr-left{display:flex;align-items:center;gap:.9rem;}
+.sg-hdr-icon{width:42px;height:42px;border-radius:var(--sg-radius);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--sg-accent-light);border:1px solid rgba(58,107,53,.18);color:var(--sg-accent);font-size:.95rem;box-shadow:0 4px 12px var(--sg-accent-glow);}
+html[data-theme=dark] .sg-hdr-icon{border-color:rgba(106,191,96,.18);}
+.sg-eyebrow{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--sg-accent);margin-bottom:.15rem;}
+.sg-title{font-family:var(--sg-font-display);font-size:1.28rem;font-weight:700;color:var(--sg-text);letter-spacing:-.02em;margin:0;}
+.sg-subtitle{font-size:.75rem;color:var(--sg-text-3);margin:.1rem 0 0;}
+
+/* Flash */
+.sg-flash{display:flex;align-items:center;gap:.68rem;padding:.72rem .95rem;border-radius:var(--sg-radius-sm);font-size:.79rem;font-weight:500;border:1px solid;margin-bottom:1rem;animation:sg-up .28s ease both;}
+.sg-flash span{flex:1;}
+.sg-flash button{background:none;border:none;cursor:pointer;color:inherit;opacity:.55;padding:0;}
+.sg-flash button:hover{opacity:1;}
+.sg-flash-success{background:var(--sg-success-bg);border-color:rgba(46,125,79,.2);color:var(--sg-success);}
+.sg-flash-danger{background:var(--sg-danger-bg);border-color:rgba(168,64,64,.2);color:var(--sg-danger);}
+.sg-flash-warn{background:var(--sg-warn-bg);border-color:rgba(154,106,26,.2);color:var(--sg-warn);}
+#alertContainer .sg-flash{animation:sg-up .2s ease both;}
+
+/* Card */
+.sg-card{background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--sg-radius);box-shadow:0 1px 2px rgba(28,35,24,.04);overflow:hidden;margin-bottom:1rem;animation:sg-up .3s ease both;}
+.sg-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.88rem 1.15rem;border-bottom:1px solid var(--sg-border);background:var(--sg-surface-2);flex-wrap:wrap;}
+.sg-card-title{font-family:var(--sg-font-display);font-size:.88rem;font-weight:600;color:var(--sg-text);display:flex;align-items:center;gap:.5rem;margin:0;}
+.sg-card-title i{color:var(--sg-accent);font-size:.82rem;}
+.sg-card-body{padding:1.15rem 1.2rem;}
+
+/* Filters grid */
+.sg-filters{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;align-items:end;}
+.sg-filters-row2{display:grid;grid-template-columns:1fr 1fr auto;gap:.85rem;align-items:end;margin-top:.85rem;}
+@media(max-width:900px){.sg-filters{grid-template-columns:1fr 1fr;}}
+@media(max-width:580px){.sg-filters,.sg-filters-row2{grid-template-columns:1fr;}}
+
+/* Field */
+.sg-field{display:flex;flex-direction:column;gap:.36rem;}
+.sg-label{font-size:.68rem;font-weight:700;color:var(--sg-text-3);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:.35rem;}
+.sg-label i{color:var(--sg-accent);font-size:.64rem;}
+.sg-sel-wrap{position:relative;}
+.sg-sel{width:100%;padding:.58rem 1.9rem .58rem .78rem;background:var(--sg-surface-2);border:1px solid var(--sg-border-2);border-radius:var(--sg-radius-sm);color:var(--sg-text);font-family:var(--sg-font-ui);font-size:.79rem;appearance:none;cursor:pointer;outline:none;transition:border-color var(--sg-t),box-shadow var(--sg-t);}
+.sg-sel:focus{border-color:var(--sg-accent);box-shadow:0 0 0 3px var(--sg-accent-bg);}
+.sg-sel:disabled{opacity:.42;cursor:not-allowed;}
+.sg-sel option{background:var(--sg-surface-2);color:var(--sg-text);}
+.sg-sel-arrow{position:absolute;right:.68rem;top:50%;transform:translateY(-50%);font-size:.55rem;color:var(--sg-text-3);pointer-events:none;}
+
+/* Clock */
+.sg-clock{font-size:.68rem;font-family:var(--sg-font-mono);color:var(--sg-text-3);background:var(--sg-surface-2);border:1px solid var(--sg-border);padding:.28rem .72rem;border-radius:6px;white-space:nowrap;}
+
+/* Buttons */
+.sg-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.05rem;border-radius:var(--sg-radius-sm);font-family:var(--sg-font-ui);font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid;text-decoration:none;transition:all var(--sg-t);}
+.sg-btn i{font-size:.72rem;}
+.sg-btn-primary{background:var(--sg-accent);border-color:var(--sg-accent);color:#fff;box-shadow:0 3px 10px var(--sg-accent-glow);}
+.sg-btn-primary:hover:not(:disabled){background:var(--sg-accent-mid);border-color:var(--sg-accent-mid);transform:translateY(-1px);box-shadow:0 6px 16px var(--sg-accent-glow);}
+.sg-btn-primary:disabled{opacity:.42;cursor:not-allowed;transform:none;}
+.sg-btn-ghost{background:transparent;border-color:var(--sg-border-2);color:var(--sg-text-3);}
+.sg-btn-ghost:hover{background:var(--sg-surface-2);color:var(--sg-text);}
+.sg-btn-danger{background:var(--sg-danger-bg);border-color:rgba(168,64,64,.2);color:var(--sg-danger);padding:.3rem .62rem;font-size:.72rem;}
+.sg-btn-danger:hover{background:rgba(168,64,64,.14);border-color:rgba(168,64,64,.35);}
+.sg-btn-danger:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Table */
+.sg-tbl-wrap{overflow-x:auto;}
+.sg-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.sg-th{padding:.6rem .9rem;font-size:.59rem;text-transform:uppercase;letter-spacing:.12em;color:var(--sg-text-3);border-bottom:1px solid var(--sg-border);font-weight:700;text-align:left;white-space:nowrap;}
+.sg-tr{border-bottom:1px solid var(--sg-border);transition:background var(--sg-t);}
+.sg-tr:last-child{border-bottom:none;}
+.sg-tr:hover td{background:var(--sg-surface-2);}
+.sg-td{padding:.7rem .9rem;color:var(--sg-text-2);vertical-align:middle;}
+.sg-td-subject{font-weight:600;color:var(--sg-text);}
+.sg-td-teacher{display:flex;align-items:center;gap:.55rem;}
+.sg-teacher-avatar{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:var(--sg-accent-bg);border:1px solid rgba(58,107,53,.18);color:var(--sg-accent);font-size:.58rem;font-weight:700;flex-shrink:0;font-family:var(--sg-font-mono);}
+.sg-class-label{display:flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:600;color:var(--sg-text-3);background:var(--sg-surface-2);border:1px solid var(--sg-border);padding:.22rem .6rem;border-radius:5px;}
+.sg-class-label i{color:var(--sg-accent);font-size:.62rem;}
+
+/* Empty state */
+.sg-empty{text-align:center;padding:2.5rem 1rem;color:var(--sg-text-3);font-size:.79rem;}
+.sg-empty-icon{font-size:1.6rem;margin-bottom:.5rem;opacity:.26;}
+
+/* Modal */
+.sg-overlay{position:fixed;inset:0;z-index:8000;background:rgba(28,35,24,.52);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s;}
+.sg-overlay.on{opacity:1;pointer-events:all;}
+.sg-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);z-index:8001;width:90%;max-width:380px;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--sg-radius);padding:1.65rem;box-shadow:0 10px 36px rgba(28,35,24,.11);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+.sg-modal.on{opacity:1;pointer-events:all;transform:translate(-50%,-50%);}
+.sg-modal-danger-ring{width:44px;height:44px;border-radius:11px;background:var(--sg-danger-bg);border:1px solid rgba(168,64,64,.2);display:flex;align-items:center;justify-content:center;color:var(--sg-danger);margin-bottom:.95rem;}
+.sg-modal-title{font-family:var(--sg-font-display);font-size:1rem;font-weight:600;color:var(--sg-text);margin-bottom:.35rem;}
+.sg-modal-desc{font-size:.78rem;color:var(--sg-text-2);line-height:1.62;margin-bottom:1.35rem;}
+.sg-modal-actions{display:flex;gap:.6rem;justify-content:flex-end;}
+.sg-btn-cancel{font-family:var(--sg-font-ui);font-size:.78rem;font-weight:500;padding:.46rem .95rem;border-radius:var(--sg-radius-sm);cursor:pointer;background:var(--sg-surface-2);color:var(--sg-text-2);border:1px solid var(--sg-border-2);transition:all var(--sg-t);}
+.sg-btn-cancel:hover{background:var(--sg-surface-3);color:var(--sg-text);}
+.sg-btn-confirm-del{font-family:var(--sg-font-ui);font-size:.78rem;font-weight:600;padding:.46rem 1.1rem;border-radius:var(--sg-radius-sm);cursor:pointer;background:var(--sg-danger);color:#fff;border:none;transition:all var(--sg-t);}
+.sg-btn-confirm-del:hover{background:#933838;box-shadow:0 4px 14px rgba(168,64,64,.35);}
+.sg-btn-confirm-del:disabled{opacity:.5;cursor:not-allowed;}
 </style>
-@endsection
+@endpush
 
 @section('content')
-<div class="container-fluid py-4" style="max-width:1180px;">
+<div class="sg">
 
-    <div class="d-flex align-items-start justify-content-between mb-4">
-        <div>
-            <h4 style="margin:0;font-size:1.05rem;font-weight:700;">
-                <i class="fas fa-chalkboard-teacher me-2" style="color:var(--accent)"></i>Affectation des enseignants
-            </h4>
-            <p style="margin:.2rem 0 0;font-size:.78rem;color:var(--text-muted);">
-                Par classe et par année — une matière = un seul enseignant
-            </p>
+    <div class="sg-hdr">
+        <div class="sg-hdr-left">
+            <div class="sg-hdr-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div>
+                <div class="sg-eyebrow">Administration · Enseignants</div>
+                <h1 class="sg-title">Affectation des enseignants</h1>
+                <p class="sg-subtitle">Par classe et par année — une matière = un seul enseignant</p>
+            </div>
         </div>
-        <span id="liveClock"></span>
+        <span class="sg-clock" id="liveClock"></span>
     </div>
 
     <div id="alertContainer"></div>
 
-    {{-- Formulaire --}}
-    <div class="dk-card">
-        <div class="dk-card-header">
-            <h5><i class="fas fa-plus-circle me-2" style="color:var(--accent)"></i>Nouvelle affectation</h5>
+    {{-- Formulaire nouvelle affectation --}}
+    <div class="sg-card" style="animation-delay:.05s">
+        <div class="sg-card-hdr">
+            <h2 class="sg-card-title"><i class="fas fa-plus-circle"></i> Nouvelle affectation</h2>
         </div>
-        <div class="dk-card-body">
+        <div class="sg-card-body">
             <form id="assignmentForm" method="POST" action="{{ route('teacher-assignments.store') }}">
                 @csrf
-                <div class="row g-3 mb-3">
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Année</label>
-                        <select name="year_id" id="year_id" class="form-select" required>
-                            <option value="">— Choisir —</option>
-                            @foreach($years as $y)
-                                <option value="{{ $y->id }}">{{ $y->year }}</option>
-                            @endforeach
-                        </select>
+                <div class="sg-filters">
+                    <div class="sg-field">
+                        <label class="sg-label" for="year_id"><i class="fas fa-calendar-alt"></i> Année</label>
+                        <div class="sg-sel-wrap">
+                            <select name="year_id" id="year_id" class="sg-sel" required>
+                                <option value="">— Choisir —</option>
+                                @foreach($years as $y)
+                                    <option value="{{ $y->id }}">{{ $y->year }}</option>
+                                @endforeach
+                            </select>
+                            <i class="fas fa-chevron-down sg-sel-arrow"></i>
+                        </div>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Filière</label>
-                        <select name="sector_id" id="sector_id" class="form-select" disabled required>
-                            <option value="">—</option>
-                        </select>
+                    <div class="sg-field">
+                        <label class="sg-label" for="sector_id"><i class="fas fa-sitemap"></i> Filière</label>
+                        <div class="sg-sel-wrap">
+                            <select name="sector_id" id="sector_id" class="sg-sel" disabled required>
+                                <option value="">—</option>
+                            </select>
+                            <i class="fas fa-chevron-down sg-sel-arrow"></i>
+                        </div>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Promotion</label>
-                        <select name="promotion_id" id="promotion_id" class="form-select" disabled required>
-                            <option value="">—</option>
-                        </select>
+                    <div class="sg-field">
+                        <label class="sg-label" for="promotion_id"><i class="fas fa-layer-group"></i> Promotion</label>
+                        <div class="sg-sel-wrap">
+                            <select name="promotion_id" id="promotion_id" class="sg-sel" disabled required>
+                                <option value="">—</option>
+                            </select>
+                            <i class="fas fa-chevron-down sg-sel-arrow"></i>
+                        </div>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Classe</label>
-                        <select name="classroom_id" id="classroom_id" class="form-select" disabled required>
-                            <option value="">—</option>
-                        </select>
+                    <div class="sg-field">
+                        <label class="sg-label" for="classroom_id"><i class="fas fa-door-open"></i> Classe</label>
+                        <div class="sg-sel-wrap">
+                            <select name="classroom_id" id="classroom_id" class="sg-sel" disabled required>
+                                <option value="">—</option>
+                            </select>
+                            <i class="fas fa-chevron-down sg-sel-arrow"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-5">
-                        <label class="form-label">Matière</label>
-                        <select name="subject_id" id="subject_id" class="form-select" disabled required>
-                            <option value="">—</option>
-                        </select>
+                <div class="sg-filters-row2">
+                    <div class="sg-field">
+                        <label class="sg-label" for="subject_id"><i class="fas fa-book"></i> Matière</label>
+                        <div class="sg-sel-wrap">
+                            <select name="subject_id" id="subject_id" class="sg-sel" disabled required>
+                                <option value="">—</option>
+                            </select>
+                            <i class="fas fa-chevron-down sg-sel-arrow"></i>
+                        </div>
                     </div>
-                    <div class="col-md-5">
-                        <label class="form-label">Enseignant</label>
-                        <select name="teacher_id" id="teacher_id" class="form-select" required>
-                            <option value="">— Choisir un enseignant —</option>
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">{{ $t->name }} {{ $t->surname }}</option>
-                            @endforeach
-                        </select>
+                    <div class="sg-field">
+                        <label class="sg-label" for="teacher_id"><i class="fas fa-user-tie"></i> Enseignant</label>
+                        <div class="sg-sel-wrap">
+                            <select name="teacher_id" id="teacher_id" class="sg-sel" required>
+                                <option value="">— Choisir un enseignant —</option>
+                                @foreach($teachers as $t)
+                                    <option value="{{ $t->id }}">{{ $t->name }} {{ $t->surname }}</option>
+                                @endforeach
+                            </select>
+                            <i class="fas fa-chevron-down sg-sel-arrow"></i>
+                        </div>
                     </div>
-                    <div class="col-md-2 d-flex justify-content-end gap-2">
-                        <button type="reset" class="btn-ghost-dk"><i class="fas fa-undo"></i></button>
-                        <button type="submit" id="submitBtn" class="btn-primary-dk">
-                            <i class="fas fa-save"></i> Sauvegarder
+                    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+                        <button type="reset" class="sg-btn sg-btn-ghost"><i class="fas fa-undo"></i> Réinitialiser</button>
+                        <button type="submit" id="submitBtn" class="sg-btn sg-btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span id="submitLabel">Enregistrer</span>
+                            <span id="submitLoader" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
                         </button>
                     </div>
                 </div>
@@ -133,23 +205,23 @@ body { background: var(--bg-base) !important; color: var(--text-primary) !import
         </div>
     </div>
 
-    {{-- Tableau --}}
-    <div class="dk-card">
-        <div class="dk-card-header">
-            <h5><i class="fas fa-list-ul me-2" style="color:var(--accent)"></i>Affectations existantes</h5>
-            <span id="classLabel" style="font-size:.78rem;color:var(--text-muted);"></span>
+    {{-- Tableau des affectations --}}
+    <div class="sg-card" style="animation-delay:.1s">
+        <div class="sg-card-hdr">
+            <h2 class="sg-card-title"><i class="fas fa-list-ul"></i> Affectations existantes</h2>
+            <span id="classLabel" class="sg-class-label" style="display:none;"><i class="fas fa-door-open"></i> <span id="classLabelTxt"></span></span>
         </div>
-        <div style="overflow-x:auto;">
-            <table class="dk-table">
+        <div class="sg-tbl-wrap">
+            <table class="sg-table">
                 <thead>
                     <tr>
-                        <th>Matière</th>
-                        <th>Enseignant</th>
-                        <th style="width:100px;">Action</th>
+                        <th class="sg-th">Matière</th>
+                        <th class="sg-th">Enseignant assigné</th>
+                        <th class="sg-th" style="text-align:right;">Action</th>
                     </tr>
                 </thead>
                 <tbody id="assignmentsTable">
-                    <tr><td colspan="3"><div class="empty-state"><i class="fas fa-school"></i><p>Sélectionnez une classe pour voir les affectations</p></div></td></tr>
+                    <tr><td colspan="3"><div class="sg-empty"><div class="sg-empty-icon">🏫</div>Sélectionnez une classe pour voir les affectations</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -157,133 +229,122 @@ body { background: var(--bg-base) !important; color: var(--text-primary) !import
 </div>
 
 {{-- Modal suppression --}}
-<div class="modal fade" id="confirmModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" style="font-size:.9rem;font-weight:700;">
-                    <i class="fas fa-exclamation-triangle me-2" style="color:var(--danger)"></i>Confirmer la suppression
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="font-size:.875rem;color:var(--text-secondary);">
-                Voulez-vous vraiment retirer cette affectation ? Cette action est irréversible.
-            </div>
-            <div class="modal-footer">
-                <button class="btn-ghost-dk" data-bs-dismiss="modal">Annuler</button>
-                <button id="confirmDelete" class="btn-danger-dk" style="padding:.5rem 1.2rem;border-radius:20px;">
-                    <i class="fas fa-trash"></i> Supprimer
-                </button>
-            </div>
-        </div>
+<div class="sg-overlay" id="sgOverlay" onclick="sgClose()"></div>
+<div class="sg-modal" id="sgModal" role="dialog" aria-modal="true">
+    <div class="sg-modal-danger-ring">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+    </div>
+    <div class="sg-modal-title">Retirer l'affectation</div>
+    <p class="sg-modal-desc">Voulez-vous vraiment retirer cette affectation ? L'action est <em>irréversible</em>.</p>
+    <div class="sg-modal-actions">
+        <button class="sg-btn-cancel" onclick="sgClose()">Annuler</button>
+        <button class="sg-btn-confirm-del" id="sgModalBtn">Retirer</button>
     </div>
 </div>
 @endsection
 
 @section('another_JS')
 <script>
-// Horloge
+/* Horloge */
 (function tick(){
-    document.getElementById('liveClock').textContent =
-        new Date().toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    setTimeout(tick,1000);
+    const d=new Date();
+    const el=document.getElementById('liveClock');
+    if(el) el.textContent=d.toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    setTimeout(tick,10000);
 })();
 
-const $  = id => document.getElementById(id);
-const year  = $('year_id'), sector  = $('sector_id'), promo = $('promotion_id'),
-      room  = $('classroom_id'), subj = $('subject_id'), tbody = $('assignmentsTable');
-const confirmModal = new bootstrap.Modal($('confirmModal'));
-let deleteId = null;
+const $=id=>document.getElementById(id);
+const yearEl=$('year_id'),sectorEl=$('sector_id'),promoEl=$('promotion_id'),roomEl=$('classroom_id'),subjEl=$('subject_id'),tbody=$('assignmentsTable');
+let _delId=null;
 
-year.onchange  = loadSectors;
-sector.onchange = loadPromotions;
-promo.onchange  = () => { loadSubjects(); loadClassrooms(); };
-room.onchange   = loadAssignments;
-
-$('assignmentForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btn = $('submitBtn');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    const res  = await fetch(this.action, { method:'POST', body:new FormData(this), headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'} });
-    const data = await res.json();
-    toast(data.success?'success':'danger', data.message);
-    if (data.success) { loadAssignments(); subj.value=''; $('teacher_id').value=''; }
-    btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Sauvegarder';
-});
-
-document.addEventListener('click', e => {
-    if (e.target.closest('.del-btn')) { deleteId=e.target.closest('.del-btn').dataset.id; confirmModal.show(); }
-});
-
-$('confirmDelete').onclick = async function() {
-    if (!deleteId) return;
-    this.disabled=true; this.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
-    const res  = await fetch(`/teacher-assignments/${deleteId}`, { method:'DELETE', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content} });
-    const data = await res.json();
-    if (data.success) { document.querySelector(`tr[data-id="${deleteId}"]`)?.remove(); toast('success',data.message); if(!tbody.querySelector('tr[data-id]')) empty('Aucune affectation pour cette classe.'); }
-    else toast('danger',data.message);
-    confirmModal.hide(); this.disabled=false; this.innerHTML='<i class="fas fa-trash"></i> Supprimer'; deleteId=null;
-};
+/* Cascades */
+yearEl.onchange=loadSectors;
+sectorEl.onchange=loadPromotions;
+promoEl.onchange=()=>{loadSubjects();loadClassrooms();};
+roomEl.onchange=loadAssignments;
 
 async function loadSectors(){
-    if(!year.value) return;
-    reset([sector,promo,room,subj]);
-    sector.innerHTML='<option>Chargement…</option>';
-    const d = await get(`/teacher-assignments/get-sectors/${year.value}`);
-    sector.innerHTML='<option value="">— Filière —</option>'+d.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-    sector.disabled=false; empty('Sélectionnez une classe pour voir les affectations.');
+    if(!yearEl.value) return;
+    resetSels([sectorEl,promoEl,roomEl,subjEl]);
+    sectorEl.innerHTML='<option>Chargement…</option>';
+    const d=await get(`/teacher-assignments/get-sectors/${yearEl.value}`);
+    sectorEl.innerHTML='<option value="">— Filière —</option>'+d.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    sectorEl.disabled=false; emptyTable('Sélectionnez une classe pour voir les affectations.');
 }
-
 async function loadPromotions(){
-    if(!sector.value) return;
-    reset([promo,room,subj]);
-    promo.innerHTML='<option>Chargement…</option>';
-    const d = await get(`/teacher-assignments/get-promotions/${year.value}/${sector.value}`);
-    promo.innerHTML='<option value="">— Promotion —</option>'+d.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-    promo.disabled=false;
+    if(!sectorEl.value) return;
+    resetSels([promoEl,roomEl,subjEl]);
+    promoEl.innerHTML='<option>Chargement…</option>';
+    const d=await get(`/teacher-assignments/get-promotions/${yearEl.value}/${sectorEl.value}`);
+    promoEl.innerHTML='<option value="">— Promotion —</option>'+d.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    promoEl.disabled=false;
 }
-
 async function loadSubjects(){
-    subj.innerHTML='<option>Chargement…</option>'; subj.disabled=true;
-    const d = await get(`/teacher-assignments/get-subjects/${year.value}/${sector.value}/${promo.value}`);
-    subj.innerHTML='<option value="">— Matière —</option>'+d.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-    subj.disabled=false;
+    subjEl.innerHTML='<option>Chargement…</option>'; subjEl.disabled=true;
+    const d=await get(`/teacher-assignments/get-subjects/${yearEl.value}/${sectorEl.value}/${promoEl.value}`);
+    subjEl.innerHTML='<option value="">— Matière —</option>'+d.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    subjEl.disabled=false;
 }
-
 async function loadClassrooms(){
-    room.innerHTML='<option>Chargement…</option>'; room.disabled=true;
-    const d = await get(`/teacher-assignments/get-classes/${year.value}/${sector.value}/${promo.value}`);
-    room.innerHTML='<option value="">— Classe —</option>'+d.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-    room.disabled=false;
+    roomEl.innerHTML='<option>Chargement…</option>'; roomEl.disabled=true;
+    const d=await get(`/teacher-assignments/get-classes/${yearEl.value}/${sectorEl.value}/${promoEl.value}`);
+    roomEl.innerHTML='<option value="">— Classe —</option>'+d.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    roomEl.disabled=false;
 }
-
 async function loadAssignments(){
-    if(!year.value||!room.value) return;
-    $('classLabel').textContent = room.options[room.selectedIndex]?.text??'';
-    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:2rem"><div class="spinner-border spinner-border-sm"></div></td></tr>';
-    const data = await get(`/teacher-assignments/get-assignments/${year.value}/${room.value}`);
-    const list = data.assignments ?? [];
-    if(!list.length){ empty('Aucune affectation pour cette classe.'); return; }
-    tbody.innerHTML = list.map(a=>`
-        <tr data-id="${a.id}">
-            <td>${a.subject}</td>
-            <td>${a.teacher}</td>
-            <td><button class="btn-danger-dk del-btn" data-id="${a.id}"><i class="fas fa-times"></i> Retirer</button></td>
-        </tr>`).join('');
+    if(!yearEl.value||!roomEl.value) return;
+    const lbl=roomEl.options[roomEl.selectedIndex]?.text||'';
+    $('classLabelTxt').textContent=lbl; $('classLabel').style.display='flex';
+    tbody.innerHTML=`<tr><td colspan="3" style="text-align:center;padding:1.5rem;"><i class="fas fa-spinner fa-spin" style="color:var(--sg-accent);font-size:1rem;"></i></td></tr>`;
+    const data=await get(`/teacher-assignments/get-assignments/${yearEl.value}/${roomEl.value}`);
+    const list=data.assignments??[];
+    if(!list.length){emptyTable('Aucune affectation pour cette classe.');return;}
+    tbody.innerHTML=list.map(a=>{
+        const ini=(a.teacher||'?')[0].toUpperCase()+(a.teacher||'?').split(' ')[1]?.[0]?.toUpperCase()||'';
+        return `<tr class="sg-tr" data-id="${a.id}">
+            <td class="sg-td sg-td-subject">${a.subject}</td>
+            <td class="sg-td"><div class="sg-td-teacher"><div class="sg-teacher-avatar">${ini}</div>${a.teacher}</div></td>
+            <td class="sg-td" style="text-align:right;"><button class="sg-btn sg-btn-danger del-btn" data-id="${a.id}"><i class="fas fa-times"></i> Retirer</button></td>
+        </tr>`;
+    }).join('');
 }
 
-async function get(url){ try{ const r=await fetch(url); return await r.json(); }catch{ return []; } }
+/* Submit AJAX */
+$('assignmentForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    const btn=$('submitBtn'); btn.disabled=true; $('submitLabel').style.display='none'; $('submitLoader').style.display='inline';
+    const res=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}});
+    const data=await res.json();
+    toast(data.success?'success':'danger',data.message);
+    if(data.success){loadAssignments();subjEl.value='';$('teacher_id').value='';}
+    btn.disabled=false; $('submitLabel').style.display=''; $('submitLoader').style.display='none';
+});
 
-function reset(selects){ selects.forEach(s=>{ s.innerHTML='<option value="">—</option>'; s.disabled=true; }); }
+/* Délégation suppression */
+document.addEventListener('click',e=>{const b=e.target.closest('.del-btn');if(b){_delId=b.dataset.id;$('sgOverlay').classList.add('on');$('sgModal').classList.add('on');setTimeout(()=>$('sgModalBtn').focus(),50);}});
+function sgClose(){_delId=null;$('sgOverlay').classList.remove('on');$('sgModal').classList.remove('on');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')sgClose();});
+$('sgOverlay').onclick=sgClose;
 
-function empty(msg){ tbody.innerHTML=`<tr><td colspan="3"><div class="empty-state"><i class="fas fa-inbox"></i><p>${msg}</p></div></td></tr>`; }
+$('sgModalBtn').addEventListener('click',async function(){
+    if(!_delId) return;
+    this.disabled=true; this.textContent='Suppression…';
+    const res=await fetch(`/teacher-assignments/${_delId}`,{method:'DELETE',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}});
+    const data=await res.json();
+    if(data.success){const row=tbody.querySelector(`tr[data-id="${_delId}"]`);row?.remove();toast('success',data.message);if(!tbody.querySelector('tr[data-id]'))emptyTable('Aucune affectation pour cette classe.');}
+    else toast('danger',data.message);
+    sgClose(); this.disabled=false; this.textContent='Retirer';
+});
 
-function toast(type, msg){
+/* Helpers */
+async function get(url){try{const r=await fetch(url);return await r.json();}catch{return [];}}
+function resetSels(sels){sels.forEach(s=>{s.innerHTML='<option value="">—</option>';s.disabled=true;});}
+function emptyTable(msg){tbody.innerHTML=`<tr><td colspan="3"><div class="sg-empty"><div class="sg-empty-icon">🏫</div>${msg}</div></td></tr>`;}
+function toast(type,msg){
     const d=document.createElement('div');
-    d.className=`dk-alert dk-alert-${type}`;
-    d.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-triangle'}"></i> ${msg}`;
-    const c=$('alertContainer'); c.innerHTML=''; c.appendChild(d);
-    setTimeout(()=>d.remove(),5000);
+    d.className=`sg-flash sg-flash-${type}`;
+    d.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+    const c=$('alertContainer');c.innerHTML='';c.appendChild(d);setTimeout(()=>d.remove(),5500);
 }
 </script>
 @endsection
