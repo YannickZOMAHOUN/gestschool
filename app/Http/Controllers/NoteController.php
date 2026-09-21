@@ -18,8 +18,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
-// PhpSpreadsheet (inclus via maatwebsite/excel)
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
@@ -77,136 +75,180 @@ class NoteController extends Controller
         return view('dashboard.notes.create', compact('years', 'activeYear'));
     }
 
-    public function index(Request $request)
-    {
-        $user = Auth::user();
+ public function index(Request $request)
+{
+    $user = Auth::user();
+
+    // Vérification des droits pour les enseignants (doit être Professeur Principal)
+    if ($user->isEnseignant()) {
+        $isPP = $user->principalClasses()->exists();
+        if (!$isPP) {
+            return redirect()->route('note.create')
+                ->with('warning', 'Accès réservé aux professeurs principaux.');
+        }
+    }
+
+    $years = Year::orderBy('year', 'desc')->get();
+    $activeYear = $this->getActiveYear();
+    $notes = collect();
+    $subjects = collect();
+    $classroom = null;
+    $studentsData = collect();
+    $classroomsForFilter = collect();
+
+    // 1. Chargement des classes disponibles pour le filtre
+    if ($request->filled('year_id')) {
+        $query = PromotionClassroom::with([
+            'promotionSector.sectorYear.sector',
+            'promotionSector.sectorYear.year',
+        ])->whereHas('promotionSector.sectorYear', function ($q) use ($request) {
+            $q->where('year_id', $request->year_id);
+        });
 
         if ($user->isEnseignant()) {
-            $isPP = $user->principalClasses()->exists();
-            if (!$isPP) {
-                return redirect()->route('note.create')
-                    ->with('warning', 'Accès réservé aux professeurs principaux.');
+            $ppClassroomIds = $user->principalClasses()
+                ->where('year_id', $request->year_id)
+                ->pluck('classroom_id')
+                ->toArray();
+            $query->whereIn('id', $ppClassroomIds);
+        }
+
+        $classroomsForFilter = $query->get()->map(function ($c) {
+            $sector = $c->promotionSector->sectorYear->sector->name_sector ?? '';
+            $promotion = $c->promotionSector->promotion_sector ?? '';
+            $c->display_name = trim($promotion . ' · ' . $c->name, ' ·');
+            $c->meta = $sector . ($promotion ? ' — ' . $promotion : '');
+            return $c;
+        })->sortBy('display_name')->values();
+    }
+
+    // 2. Chargement des notes et calcul des statistiques par élève
+    if ($request->filled(['year_id', 'classroom_id', 'semester'])) {
+
+        if ($user->isEnseignant()) {
+            $hasAccess = $user->principalClasses()
+                ->where('classroom_id', $request->classroom_id)
+                ->where('year_id', $request->year_id)
+                ->exists();
+            if (!$hasAccess) {
+                abort(403, 'Vous n\'êtes pas le professeur principal de cette classe.');
             }
         }
 
-        $years               = Year::orderBy('year', 'desc')->get();
-        $activeYear          = $this->getActiveYear();
-        $notes               = collect();
-        $subjects            = collect();
-        $classroom           = null;
-        $studentsData        = collect();
-        $classroomsForFilter = collect();
+        $classroom = PromotionClassroom::with([
+            'promotionSector.sectorYear.sector',
+            'promotionSector.sectorYear.year',
+        ])->find($request->classroom_id);
 
-        if ($request->filled('year_id')) {
-            $query = PromotionClassroom::with([
-                'promotionSector.sectorYear.sector',
-                'promotionSector.sectorYear.year',
-            ])->whereHas('promotionSector.sectorYear', function ($q) use ($request) {
-                $q->where('year_id', $request->year_id);
-            });
-
-            if ($user->isEnseignant()) {
-                $ppClassroomIds = $user->principalClasses()
-                    ->where('year_id', $request->year_id)
-                    ->pluck('classroom_id')->toArray();
-                $query->whereIn('id', $ppClassroomIds);
-            }
-
-            $classroomsForFilter = $query->get()->map(function ($c) {
-                $sector       = $c->promotionSector->sectorYear->sector->name_sector ?? '';
-                $promotion    = $c->promotionSector->promotion_sector ?? '';
-                $c->display_name = trim($promotion . ' · ' . $c->name, ' · ');
-                $c->meta         = $sector . ($promotion ? ' — ' . $promotion : '');
-                return $c;
-            })->sortBy('display_name')->values();
-        }
-
-        if ($request->filled(['year_id', 'classroom_id', 'semester'])) {
-
-            if ($user->isEnseignant()) {
-                $hasAccess = $user->principalClasses()
+        if ($classroom) {
+            $rawNotes = Note::with(['recording.student', 'subject', 'ratio'])
+                ->whereHas('recording', fn($q) => $q
                     ->where('classroom_id', $request->classroom_id)
                     ->where('year_id', $request->year_id)
-                    ->exists();
-                if (!$hasAccess) {
-                    abort(403, 'Vous n\'êtes pas le professeur principal de cette classe.');
-                }
-            }
+                )
+                ->where('semester', $request->semester)
+                ->get();
 
-            $classroom = PromotionClassroom::with([
-                'promotionSector.sectorYear.sector',
-                'promotionSector.sectorYear.year',
-            ])->find($request->classroom_id);
-
-            if ($classroom) {
-                $rawNotes = Note::with(['recording.student', 'subject', 'ratio'])
-                    ->whereHas('recording', fn($q) => $q
-                        ->where('classroom_id', $request->classroom_id)
-                        ->where('year_id', $request->year_id))
-                    ->where('semester', $request->semester)
-                    ->get();
-
-                foreach ($rawNotes as $note) {
-                    if (!$subjects->has($note->subject_id)) {
-                        $subjects->put($note->subject_id, [
-                            'name'        => $note->subject->name,
-                            'coefficient' => $note->ratio->coefficient,
-                        ]);
-                    }
-                }
-                $subjects = $subjects->sortBy('name');
-                $notes    = $rawNotes->groupBy('recording_id');
-
-                foreach ($notes as $recordingId => $studentNotes) {
-                    $totalMoyPonderee = 0;
-                    $totalCoef        = 0;
-                    $notesParMatiere  = [];
-
-                    foreach ($subjects as $subjectId => $subjectInfo) {
-                        $note        = $studentNotes->where('subject_id', $subjectId)->first();
-                        $moyInterros = null;
-                        $moy20       = null;
-
-                        if ($note) {
-                            $interros    = is_array($note->interros)
-                                ? $note->interros
-                                : (json_decode($note->interros, true) ?? []);
-                            $moyInterros = count($interros) > 0
-                                ? $this->trunc2(array_sum($interros) / count($interros))
-                                : null;
-                            $moy20 = $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2);
-
-                            if ($moy20 !== null) {
-                                $totalMoyPonderee += $moy20 * $subjectInfo['coefficient'];
-                                $totalCoef        += $subjectInfo['coefficient'];
-                            }
-                        }
-                        $notesParMatiere[$subjectId] = [
-                            'note'         => $note,
-                            'moy_interros' => $moyInterros,
-                            'moy_20'       => $moy20,
-                        ];
-                    }
-
-                    $moyenneGenerale = $totalCoef > 0
-                        ? $this->trunc2($totalMoyPonderee / $totalCoef)
-                        : null;
-
-                    $recording = $studentNotes->first()->recording;
-                    $studentsData->push([
-                        'student'           => $recording->student,
-                        'notes_par_matiere' => $notesParMatiere,
-                        'moyenne_generale'  => $moyenneGenerale,
+            // Construction de la liste des matières et leurs coefficients
+            foreach ($rawNotes as $note) {
+                if (!$subjects->has($note->subject_id)) {
+                    $subjects->put($note->subject_id, [
+                        'name' => $note->subject->name,
+                        'coefficient' => $note->ratio->coefficient,
                     ]);
                 }
-                $studentsData = $studentsData->sortBy(fn($s) => $s['student']->name)->values();
             }
-        }
+            $subjects = $subjects->sortBy('name');
+            $notes = $rawNotes->groupBy('recording_id');
 
-        return view('dashboard.notes.list', compact(
-            'years', 'activeYear', 'notes', 'subjects', 'classroom', 'studentsData', 'classroomsForFilter'
-        ));
+            // 3. Traitement élève par élève
+            foreach ($notes as $recordingId => $studentNotes) {
+                $totalMoyPonderee = 0;
+                $totalCoef = 0;
+                $notesParMatiere = [];
+
+                foreach ($subjects as $subjectId => $subjectInfo) {
+                    $note = $studentNotes->where('subject_id', $subjectId)->first();
+                    $moyInterros = null;
+                    $moy20 = null;
+
+                    if ($note) {
+                        $interros = is_array($note->interros) ? $note->interros : (json_decode($note->interros, true) ?? []);
+                        $moyInterros = count($interros) > 0 ? $this->trunc2(array_sum($interros) / count($interros)) : null;
+                        $moy20 = $this->calculateMoyenne20($interros, $note->devoir1, $note->devoir2);
+
+                        if ($moy20 !== null) {
+                            $totalMoyPonderee += $moy20 * $subjectInfo['coefficient'];
+                            $totalCoef += $subjectInfo['coefficient'];
+                        }
+                    }
+
+                    $notesParMatiere[$subjectId] = [
+                        'note' => $note,
+                        'moy_interros' => $moyInterros,
+                        'moy_20' => $moy20,
+                    ];
+                }
+
+                $moyenneGenerale = $totalCoef > 0 ? $this->trunc2($totalMoyPonderee / $totalCoef) : null;
+                $recording = $studentNotes->first()->recording;
+
+                // 4. Calcul de la moyenne annuelle (Uniquement si Semestre 2 est sélectionné)
+                $moyenneAnnuelle = null;
+                if ((int)$request->semester === 2) {
+                    $notesS1 = Note::with('ratio')->where('recording_id', $recordingId)->where('semester', 1)->get();
+                    $totalPondereS1 = 0;
+                    $totalCoefS1 = 0;
+
+                    foreach ($notesS1 as $nS1) {
+                        $interrosS1 = is_array($nS1->interros) ? $nS1->interros : (json_decode($nS1->interros, true) ?? []);
+                        $moyS1 = $this->calculateMoyenne20($interrosS1, $nS1->devoir1, $nS1->devoir2);
+
+                        if ($moyS1 !== null) {
+                            $coefS1 = $nS1->ratio->coefficient ?? 1;
+                            $totalPondereS1 += $moyS1 * $coefS1;
+                            $totalCoefS1 += $coefS1;
+                        }
+                    }
+
+                    $moyS1Calc = $totalCoefS1 > 0 ? $this->trunc2($totalPondereS1 / $totalCoefS1) : null;
+
+                    // Formule annuelle : (MoyS2 * 2 + MoyS1) / 3
+                    if ($moyS1Calc !== null && $moyenneGenerale !== null) {
+                        $moyenneAnnuelle = $this->trunc2((($moyenneGenerale * 2) + $moyS1Calc) / 3);
+                    } elseif ($moyenneGenerale !== null) {
+                        $moyenneAnnuelle = $moyenneGenerale;
+                    } elseif ($moyS1Calc !== null) {
+                        $moyenneAnnuelle = $moyS1Calc;
+                    }
+                }
+
+                // 5. Ajout des données à la collection (avec les nouveaux champs)
+                $studentsData->push([
+                    'student' => $recording->student,
+                    'notes_par_matiere' => $notesParMatiere,
+                    'moyenne_generale' => $moyenneGenerale,
+                    'total_pondere' => $totalMoyPonderee,    // <-- NOUVEAU
+                    'total_coef' => $totalCoef,              // <-- NOUVEAU
+                    'moyenne_annuelle' => $moyenneAnnuelle,  // <-- NOUVEAU (pour les stats globales)
+                ]);
+            }
+
+            // Tri alphabétique des élèves
+            $studentsData = $studentsData->sortBy(fn($s) => $s['student']->name)->values();
+        }
     }
+
+    return view('dashboard.notes.list', compact(
+        'years',
+        'activeYear',
+        'notes',
+        'subjects',
+        'classroom',
+        'studentsData',
+        'classroomsForFilter'
+    ));
+}
 
     public function show($studentId)
     {

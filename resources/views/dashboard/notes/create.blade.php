@@ -2940,7 +2940,7 @@ new NotesManager();
     align-items: center;
 }
 
-.step-placeholder {
+.step-placeholder {0
     display: flex;
     align-items: center;
     gap: 8px;
